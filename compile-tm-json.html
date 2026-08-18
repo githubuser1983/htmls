@@ -11,7 +11,7 @@
 <body><main>
 <h1>Compile TM JSON · Text → klassische n‑Gramm‑TM</h1>
 <div class="card">
-<p>Diese Stufe erzeugt <b>die deterministische Turingmaschine</b>. Jeder beobachtete n‑Gramm‑Kontext wird ein Zustand. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den Suffix‑Folgezustand. Zusätzlich wird der Quelltext komprimiert im JSON-Artefakt mitgeführt, damit <code>compile-growing.html</code> daraus das Curriculum n=1,2,…,N exakt wieder aufbauen kann. Noch keine ReLU‑Gewichte.</p>
+<p>Diese Stufe erzeugt <b>die deterministische Turingmaschine</b>. Der Zustand an Position <i>i</i> ist ausschließlich der Kontext aus den letzten <i>n</i> bereits gesehenen Zeichen des Präfixes <code>text[0:i]</code> (links mit BOS aufgefüllt) – niemals zukünftige Zeichen. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den neuen Vergangenheitskontext. Für das Growing-Curriculum erhalten alle Zustände über n=1,…,N eine gemeinsame, opake globale ID. Zusätzlich wird der Quelltext komprimiert im JSON-Artefakt mitgeführt. Noch keine ReLU‑Gewichte.</p>
 <input id="file" type="file" accept=".txt,text/plain">
 <div class="row" style="margin-top:12px">
   <div class="field"><label>Kontextordnung</label>
@@ -25,7 +25,7 @@
 <small>AUTO prüft 1, 2, 4, 8, … und sucht danach binär das kleinste n, bei dem jeder beobachtete Kontext genau einen Nachfolger besitzt.</small>
 <div class="row" style="margin-top:12px"><button id="compile">TM JSON erzeugen</button><button id="stop" class="danger" disabled>Stop</button></div>
 </div>
-<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie enthält die finale Ground‑Truth‑Übergangstabelle plus den Quelltext für das Growing-Curriculum. Durch gzip ist der Textanteil normalerweise stark komprimiert.</small></div>
+<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie enthält die finale Ground‑Truth‑Übergangstabelle, die gemeinsame Curriculum-Indizierung und den Quelltext. Die Zustands-IDs sind opake Nummern; der Kontext selbst steckt nicht in der ReLU-Eingabedimension.</small></div>
 <script>
 const MAX_INPUT_BYTES=32*1024*1024;
 const file=document.getElementById('file'),btn=document.getElementById('compile'),stopBtn=document.getElementById('stop'),status=document.getElementById('status'),bar=document.getElementById('bar'),stats=document.getElementById('stats'),result=document.getElementById('result');
@@ -73,35 +73,51 @@ async function findAutoN(ids,V){
  }
  return {N:hi,tests};
 }
+function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a}
+function hash32(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h>>>0}
+function chooseAffine(total,seedText){if(total<=1)return {a:1,b:0,modulus:1};let a=Math.min(65521,total-1);if((a&1)===0)a--;while(a>1&&gcd(a,total)!==1)a-=2;if(a<=1)a=1;const b=hash32(seedText)%total;return {a,b,modulus:total}}
+function opaqueId(g,aff){return (aff.a*g+aff.b)%aff.modulus}
+async function advanceLocal(ids,V,n,prev,L){
+ const base=L+2,seen=new Map(),ctx=new Uint32Array(L+1);
+ for(let i=0;i<=L;i++){
+   const left=(i-n>=0)?ids[i-n]:V,pr=prev?prev[i]:0,key=left*base+pr;
+   let id=seen.get(key);if(id===undefined){id=seen.size;seen.set(key,id)}ctx[i]=id;
+   if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'index',N:n,done:i,total:L+1,contexts:seen.size});await tick()}
+ }
+ return {ctx,count:seen.size};
+}
 async function build(prep,N,name,selection){
- const {chars,alphabet,blank,ids,V,pad}=prep;
- const map=new Map(),ring=new Uint16Array(N);ring.fill(pad);
- for(let i=0;i<ids.length;i++){
-   if(cancelled)throw Error('Abgebrochen.');
-   const key=keyFromRing(ring),y=ids[i];let z=map.get(key);if(!z){z={first:y,firstCount:1,other:null,total:1,observed:true,best:-1,bestCount:0,nextKey:''};map.set(key,z)}else addCount(z,y);
-   for(let p=0;p<N-1;p++)ring[p]=ring[p+1];ring[N-1]=y;
-   if((i&8191)===0){postMessage({kind:'progress',phase:'scan',N,done:i,total:ids.length,contexts:map.size});await tick()}
+ const {chars,alphabet,blank,ids,V}=prep,L=ids.length;
+ const stageOffsets=[],stageCounts=[];let prev=null,finalCtx=null,total=0;
+ for(let n=1;n<=N;n++){
+   const z=await advanceLocal(ids,V,n,prev,L);stageOffsets.push(total);stageCounts.push(z.count);total+=z.count;prev=z.ctx;
+   if(n===N)finalCtx=z.ctx;
+   postMessage({kind:'stage-indexed',N:n,maxN:N,states:z.count,totalStates:total});
+   if(total>0xFFFFFFFF)throw Error('Zu viele Curriculum-Zustände für die aktuelle 32-Bit-ID-Realisierung.');
  }
- const observed=[...map.entries()];let modalCorrect=0,ambiguous=0;
- for(let i=0;i<observed.length;i++){
-   const [key,z]=observed[i],[y,c]=bestY(z);z.best=y;z.bestCount=c;modalCorrect+=c;if(c!==z.total)ambiguous++;z.nextKey=key.slice(1)+String.fromCharCode(y+1);
-   if(!map.has(z.nextKey))map.set(z.nextKey,{observed:false,id:-1});
-   if((i&8191)===0){postMessage({kind:'progress',phase:'close',N,done:i,total:observed.length,contexts:map.size});await tick()}
+ const aff=chooseAffine(total,name+'|'+L+'|'+N+'|'+V),offset=stageOffsets[N-1],finalCount=stageCounts[N-1];
+ const gid=local=>opaqueId(offset+local,aff);
+ const rec=new Array(finalCount);let observed=0;
+ for(let i=0;i<L;i++){
+   const s=finalCtx[i],y=ids[i];let r=rec[s];if(!r){r={first:y,firstCount:1,other:null,total:1,best:-1,bestCount:0};rec[s]=r;observed++}else addCount(r,y);
+   if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'scan',N,done:i,total:L,contexts:observed});await tick()}
  }
- const keys=[...map.keys()].sort();for(let i=0;i<keys.length;i++)map.get(keys[i]).id=i;
- const fullAlphabet=[blank,...alphabet],writeOffset=1;
- const transitions=[];for(let i=0;i<observed.length;i++){
-   const [key,z]=observed[i];transitions.push([z.id,0,map.get(z.nextKey).id,z.best+writeOffset,'R']);
-   if((i&8191)===0){postMessage({kind:'progress',phase:'rows',N,done:i,total:observed.length,contexts:keys.length});await tick()}
+ let modalCorrect=0,ambiguous=0;const best=new Int32Array(finalCount);best.fill(-1);
+ for(let s=0;s<finalCount;s++){const r=rec[s];if(!r)continue;const [y,c]=bestY(r);r.best=y;r.bestCount=c;best[s]=y;modalCorrect+=c;if(c!==r.total)ambiguous++}
+ const target=new Int32Array(finalCount);target.fill(-1);
+ for(let i=0;i<L;i++){const s=finalCtx[i];if(target[s]<0&&ids[i]===best[s])target[s]=finalCtx[i+1]}
+ const transitions=[];
+ for(let s=0;s<finalCount;s++){
+   if(!rec[s])continue;if(target[s]<0)throw Error('Interner Folgezustand fehlt.');transitions.push([gid(s),0,gid(target[s]),best[s]+1,'R']);
+   if((transitions.length&8191)===0){postMessage({kind:'progress',phase:'rows',N,done:transitions.length,total:observed,contexts:finalCount});await tick()}
  }
- const haltStates=[];for(const key of keys){const z=map.get(key);if(!z.observed)haltStates.push(z.id)}
- const startKey=String.fromCharCode(pad+1).repeat(N),startState=map.get(startKey)?.id;if(startState===undefined)throw Error('Interner Startzustand fehlt.');
+ const terminalLocal=finalCtx[L],haltStates=rec[terminalLocal]?[]:[gid(terminalLocal)],startState=gid(finalCtx[0]),fullAlphabet=[blank,...alphabet];
  const obj={
-   format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand = n-Gramm-Kontext; gelesen wird Blank; Aktion schreibt den beobachteten bzw. modal gewählten Nachfolger und bewegt R.',num_tapes:1,
-   alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:startState,halt_states:haltStates,state_count:keys.length,
+   format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand an Position i = letzte n bereits gelesene Zeichen des Präfixes text[0:i], links BOS-gepadet. Gelesen wird Blank; Aktion schreibt den modal gewählten Nachfolger und bewegt R.',num_tapes:1,
+   alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:startState,halt_states:haltStates,state_count:total,
    transitions,move_encoding:{S:0,R:1,L:2},
-   source:{file:name,chars:chars.length,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed.length,total_states:keys.length,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/chars.length,padding:'BOS state-only symbol, not part of tape alphabet',state_id_assignment:'lexicographic order of encoded context',curriculum_embedded:true},
-   curriculum:{format:'NGRAM_CURRICULUM1',text:chars.join(''),max_order:N,target_rule:'modal successor per context; tie -> lower source symbol id',stage_state_indexing:'lexicographic n-gram rank within each stage; Growing uses one fixed binary width derived from final state_count',read_symbol_id:0,move:'R'}
+   source:{file:name,chars:L,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed,final_stage_states:finalCount,global_curriculum_states:total,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/L,padding:'BOS state-only symbol, not part of tape alphabet',context_semantics:'state before text[i] is last n symbols of already-seen prefix text[0:i], left padded with BOS',state_id_assignment:'opaque affine permutation of global curriculum ordinal; IDs shared and non-reused across n=1..N',curriculum_embedded:true},
+   curriculum:{format:'NGRAM_CURRICULUM2',text:chars.join(''),max_order:N,target_rule:'modal successor per past-context; tie -> lower source symbol id',context_semantics:'past-only prefix context: last n symbols of text[0:i], BOS padded',local_indexing:'first occurrence of each context among prefix positions 0..L',stage_offsets:stageOffsets,stage_state_counts:stageCounts,global_state_count:total,state_id_permutation:{kind:'affine_mod',a:aff.a,b:aff.b,modulus:aff.modulus},read_symbol_id:0,move:'R'}
  };
  return obj;
 }
@@ -115,7 +131,7 @@ onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}
 function setBusy(v){btn.disabled=v;stopBtn.disabled=!v}
 const mode=document.getElementById('mode'),order=document.getElementById('order');
 mode.onchange=()=>{order.disabled=mode.value==='auto'};
-btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const manualN=Math.max(1,+order.value||8);if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent=mode.value==='auto'?'AUTO: suche kleinstes eindeutiges n …':'Erzeuge Kontextzustände …';let foundN=null;worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase'){status.textContent=x.message}else if(x.kind==='auto-test'){status.textContent=`AUTO prüft n=${x.N} · ${x.ok?'eindeutig':'noch mehrdeutig'}`;stats.innerHTML=`<span class="pill">n=${x.N}</span><span class="pill ${x.ok?'good':'warn'}">${x.ok?'100 % deterministisch':'Konflikt gefunden'}</span>`}else if(x.kind==='auto-found'){foundN=x.N;status.textContent=`AUTO gefunden: kleinstes eindeutiges n = ${x.N}. Erzeuge TM JSON …`;stats.innerHTML=`<span class="pill good">n=${x.N} minimal</span>`;bar.style.width='0%'}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';if(x.phase==='auto-scan'){status.textContent=`AUTO prüft n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else{status.textContent=(x.phase==='scan'?'Text scannen':x.phase==='close'?'Folgezustände schließen':'Übergänge schreiben')+` · n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}stats.innerHTML=`<span class="pill">${x.contexts.toLocaleString('de-DE')} Zustände bisher</span>${foundN?`<span class="pill good">n=${foundN}</span>`:''}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}-n${x.N}.tm.json.gz`;bar.style.width='100%';status.textContent=`Fertig · n=${x.N}.`;stats.innerHTML=`<span class="pill good">n=${x.N}${x.meta.context_selection==='auto-min-deterministic'?' minimal':''}</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} Zustände</span><span class="pill">${x.meta.deterministic_successor?'100 % eindeutig':`Modal ${(100*x.meta.modal_top1).toFixed(3)} %`}</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>TM JSON erzeugt.</b> ${x.meta.context_selection==='auto-min-deterministic'?`AUTO hat <b>n=${x.N}</b> als kleinstes vollständig eindeutiges n gefunden.`:`Manueller Modus mit n=${x.N}.`}</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify({...x.meta,auto_tests:x.tests},null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,mode:mode.value,N:manualN,name:loadedName});};
+btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const manualN=Math.max(1,+order.value||8);if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent=mode.value==='auto'?'AUTO: suche kleinstes eindeutiges n …':'Erzeuge Kontextzustände …';let foundN=null;worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase'){status.textContent=x.message}else if(x.kind==='stage-indexed'){status.textContent=`Gemeinsame Zustands-IDs: n=${x.N}/${x.maxN} · ${x.states.toLocaleString('de-DE')} neue Stufenzustände · ${x.totalStates.toLocaleString('de-DE')} global`;stats.innerHTML=`<span class="pill">n=${x.N}/${x.maxN}</span><span class="pill">${x.totalStates.toLocaleString('de-DE')} globale IDs</span>`}else if(x.kind==='auto-test'){status.textContent=`AUTO prüft n=${x.N} · ${x.ok?'eindeutig':'noch mehrdeutig'}`;stats.innerHTML=`<span class="pill">n=${x.N}</span><span class="pill ${x.ok?'good':'warn'}">${x.ok?'100 % deterministisch':'Konflikt gefunden'}</span>`}else if(x.kind==='auto-found'){foundN=x.N;status.textContent=`AUTO gefunden: kleinstes eindeutiges n = ${x.N}. Erzeuge TM JSON …`;stats.innerHTML=`<span class="pill good">n=${x.N} minimal</span>`;bar.style.width='0%'}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';if(x.phase==='auto-scan'){status.textContent=`AUTO prüft n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else{status.textContent=(x.phase==='index'?'Globale Zustandsindizierung':x.phase==='scan'?'Finale Vergangenheitskontexte zählen':'Übergänge schreiben')+` · n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}stats.innerHTML=`<span class="pill">${x.contexts.toLocaleString('de-DE')} Zustände bisher</span>${foundN?`<span class="pill good">n=${foundN}</span>`:''}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}-n${x.N}.tm.json.gz`;bar.style.width='100%';status.textContent=`Fertig · n=${x.N}.`;stats.innerHTML=`<span class="pill good">n=${x.N}${x.meta.context_selection==='auto-min-deterministic'?' minimal':''}</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.meta.final_stage_states.toLocaleString('de-DE')} finale Zustände</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} globale IDs</span><span class="pill">${x.meta.deterministic_successor?'100 % eindeutig':`Modal ${(100*x.meta.modal_top1).toFixed(3)} %`}</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>TM JSON erzeugt.</b> ${x.meta.context_selection==='auto-min-deterministic'?`AUTO hat <b>n=${x.N}</b> als kleinstes vollständig eindeutiges n gefunden.`:`Manueller Modus mit n=${x.N}.`}</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify({...x.meta,auto_tests:x.tests},null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,mode:mode.value,N:manualN,name:loadedName});};
 stopBtn.onclick=()=>{if(worker){status.textContent='Stop angefordert …';worker.postMessage({cmd:'cancel'})}};
 </script>
 </main></body></html>
