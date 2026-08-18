@@ -14,8 +14,15 @@
 <p>Diese Stufe erzeugt <b>nur die deterministische Turingmaschine</b>. Jeder beobachtete n‑Gramm‑Kontext wird ein Zustand. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den Suffix‑Folgezustand. Noch keine ReLU‑Gewichte.</p>
 <input id="file" type="file" accept=".txt,text/plain">
 <div class="row" style="margin-top:12px">
-  <div class="field"><label>Kontextordnung n</label><input id="order" type="number" min="1" max="64" value="8"></div>
+  <div class="field"><label>Kontextordnung</label>
+    <select id="mode" style="width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px">
+      <option value="auto" selected>AUTO · kleinstes vollständig eindeutiges n</option>
+      <option value="manual">Manuell</option>
+    </select>
+  </div>
+  <div class="field"><label>n (nur manuell)</label><input id="order" type="number" min="1" value="8" disabled></div>
 </div>
+<small>AUTO prüft 1, 2, 4, 8, … und sucht danach binär das kleinste n, bei dem jeder beobachtete Kontext genau einen Nachfolger besitzt.</small>
 <div class="row" style="margin-top:12px"><button id="compile">TM JSON erzeugen</button><button id="stop" class="danger" disabled>Stop</button></div>
 </div>
 <div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie ist die Ground‑Truth‑Übergangstabelle für den Growing‑Compiler.</small></div>
@@ -32,44 +39,82 @@ function chooseBlank(chars){const used=new Set(chars);for(let cp=0xE000;cp<=0xF8
 function addCount(z,y){if(z.first===y){z.firstCount++;z.total++;return}if(!z.other)z.other=new Map();z.other.set(y,(z.other.get(y)||0)+1);z.total++}
 function bestY(z){let y=z.first,c=z.firstCount;if(z.other)for(const [yy,cc] of z.other){if(cc>c||(cc===c&&yy<y)){y=yy;c=cc}}return [y,c]}
 function keyFromRing(ring){let s='';for(let i=0;i<ring.length;i++)s+=String.fromCharCode(ring[i]+1);return s}
-async function build(text,N,name){
+function prepare(text){
  const chars=Array.from(text);if(chars.length<2)throw Error('Text zu kurz.');
  const alphabet=[...new Set(chars)].sort();if(alphabet.length>65000)throw Error('Zu viele verschiedene Zeichen.');
  const blank=chooseBlank(chars),sym=new Map(alphabet.map((c,i)=>[c,i])),ids=chars.map(c=>sym.get(c)),V=alphabet.length,pad=V;
+ return {chars,alphabet,blank,ids,V,pad};
+}
+async function isDeterministic(ids,V,N){
+ const pad=V,ring=new Uint16Array(N);ring.fill(pad);const seen=new Map();
+ for(let i=0;i<ids.length;i++){
+   if(cancelled)throw Error('Abgebrochen.');
+   const key=keyFromRing(ring),y=ids[i],old=seen.get(key);
+   if(old===undefined)seen.set(key,y);else if(old!==y)return {ok:false,at:i,contexts:seen.size};
+   for(let p=0;p<N-1;p++)ring[p]=ring[p+1];ring[N-1]=y;
+   if((i&32767)===0){postMessage({kind:'progress',phase:'auto-scan',N,done:i,total:ids.length,contexts:seen.size});await tick()}
+ }
+ return {ok:true,at:ids.length,contexts:seen.size};
+}
+async function findAutoN(ids,V){
+ const L=ids.length;let tests=[];
+ let r=await isDeterministic(ids,V,1);tests.push([1,r.ok]);postMessage({kind:'auto-test',N:1,ok:r.ok,tests});
+ if(r.ok)return {N:1,tests};
+ let bad=1,hi=Math.min(L,2);
+ while(true){
+   r=await isDeterministic(ids,V,hi);tests.push([hi,r.ok]);postMessage({kind:'auto-test',N:hi,ok:r.ok,tests});
+   if(r.ok)break;
+   bad=hi;if(hi>=L)throw Error('Interner Fehler: selbst n = Textlänge wurde nicht deterministisch.');
+   hi=Math.min(L,hi*2);
+ }
+ while(bad+1<hi){
+   const mid=Math.floor((bad+hi)/2);r=await isDeterministic(ids,V,mid);tests.push([mid,r.ok]);postMessage({kind:'auto-test',N:mid,ok:r.ok,tests});
+   if(r.ok)hi=mid;else bad=mid;
+ }
+ return {N:hi,tests};
+}
+async function build(prep,N,name,selection){
+ const {chars,alphabet,blank,ids,V,pad}=prep;
  const map=new Map(),ring=new Uint16Array(N);ring.fill(pad);
  for(let i=0;i<ids.length;i++){
    if(cancelled)throw Error('Abgebrochen.');
    const key=keyFromRing(ring),y=ids[i];let z=map.get(key);if(!z){z={first:y,firstCount:1,other:null,total:1,observed:true,best:-1,bestCount:0,nextKey:''};map.set(key,z)}else addCount(z,y);
    for(let p=0;p<N-1;p++)ring[p]=ring[p+1];ring[N-1]=y;
-   if((i&8191)===0){postMessage({kind:'progress',phase:'scan',done:i,total:ids.length,contexts:map.size});await tick()}
+   if((i&8191)===0){postMessage({kind:'progress',phase:'scan',N,done:i,total:ids.length,contexts:map.size});await tick()}
  }
- const observed=[...map.entries()];let modalCorrect=0;
+ const observed=[...map.entries()];let modalCorrect=0,ambiguous=0;
  for(let i=0;i<observed.length;i++){
-   const [key,z]=observed[i],[y,c]=bestY(z);z.best=y;z.bestCount=c;modalCorrect+=c;z.nextKey=key.slice(1)+String.fromCharCode(y+1);
+   const [key,z]=observed[i],[y,c]=bestY(z);z.best=y;z.bestCount=c;modalCorrect+=c;if(c!==z.total)ambiguous++;z.nextKey=key.slice(1)+String.fromCharCode(y+1);
    if(!map.has(z.nextKey))map.set(z.nextKey,{observed:false,id:-1});
-   if((i&8191)===0){postMessage({kind:'progress',phase:'close',done:i,total:observed.length,contexts:map.size});await tick()}
+   if((i&8191)===0){postMessage({kind:'progress',phase:'close',N,done:i,total:observed.length,contexts:map.size});await tick()}
  }
  const keys=[...map.keys()].sort();for(let i=0;i<keys.length;i++)map.get(keys[i]).id=i;
- const blankId=V,fullAlphabet=[blank,...alphabet],writeOffset=1;
+ const fullAlphabet=[blank,...alphabet],writeOffset=1;
  const transitions=[];for(let i=0;i<observed.length;i++){
    const [key,z]=observed[i];transitions.push([z.id,0,map.get(z.nextKey).id,z.best+writeOffset,'R']);
-   if((i&8191)===0){postMessage({kind:'progress',phase:'rows',done:i,total:observed.length,contexts:keys.length});await tick()}
+   if((i&8191)===0){postMessage({kind:'progress',phase:'rows',N,done:i,total:observed.length,contexts:keys.length});await tick()}
  }
  const haltStates=[];for(const key of keys){const z=map.get(key);if(!z.observed)haltStates.push(z.id)}
  const startKey=String.fromCharCode(pad+1).repeat(N),startState=map.get(startKey)?.id;if(startState===undefined)throw Error('Interner Startzustand fehlt.');
  const obj={
-   format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand = n-Gramm-Kontext; gelesen wird Blank; Aktion schreibt den modal beobachteten Nachfolger und bewegt R.',num_tapes:1,
-   alphabet:fullAlphabet,blank,blank_symbol_id:blankId===V?0:0,start_state:startState,halt_states:haltStates,state_count:keys.length,
+   format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand = n-Gramm-Kontext; gelesen wird Blank; Aktion schreibt den beobachteten bzw. modal gewählten Nachfolger und bewegt R.',num_tapes:1,
+   alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:startState,halt_states:haltStates,state_count:keys.length,
    transitions,move_encoding:{S:0,R:1,L:2},
-   source:{file:name,chars:chars.length,context_order:N,source_alphabet_size:V,observed_contexts:observed.length,total_states:keys.length,modal_top1:modalCorrect/chars.length,padding:'BOS state-only symbol, not part of tape alphabet',state_id_assignment:'lexicographic order of encoded context'}
+   source:{file:name,chars:chars.length,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed.length,total_states:keys.length,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/chars.length,padding:'BOS state-only symbol, not part of tape alphabet',state_id_assignment:'lexicographic order of encoded context'}
  };
  return obj;
 }
 async function gzipText(s){if(!self.CompressionStream)throw Error('CompressionStream fehlt; bitte aktuelles Chrome/Chromium verwenden.');const u=new TextEncoder().encode(s);const ab=await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return {raw:u.length,gz:new Uint8Array(ab)}}
-onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}if(x.cmd!=='compile')return;cancelled=false;try{const obj=await build(x.text,x.N,x.name);const packed=await gzipText(JSON.stringify(obj));postMessage({kind:'done',buf:packed.gz.buffer,rawSize:packed.raw,gzSize:packed.gz.length,meta:obj.source,stateCount:obj.state_count,rows:obj.transitions.length,name:x.name,N:x.N},[packed.gz.buffer])}catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
-`;
+onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}if(x.cmd!=='compile')return;cancelled=false;try{
+ const prep=prepare(x.text);let N=x.N,selection='manual',tests=[];
+ if(x.mode==='auto'){postMessage({kind:'phase',message:'AUTO: kleinstes eindeutiges n suchen …'});const a=await findAutoN(prep.ids,prep.V);N=a.N;tests=a.tests;selection='auto-min-deterministic';postMessage({kind:'auto-found',N,tests});}
+ const obj=await build(prep,N,x.name,selection);const packed=await gzipText(JSON.stringify(obj));postMessage({kind:'done',buf:packed.gz.buffer,rawSize:packed.raw,gzSize:packed.gz.length,meta:obj.source,stateCount:obj.state_count,rows:obj.transitions.length,name:x.name,N,tests},[packed.gz.buffer])
+}catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
+`
 function setBusy(v){btn.disabled=v;stopBtn.disabled=!v}
-btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const N=Math.max(1,Math.min(64,+document.getElementById('order').value||8));if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent='Erzeuge Kontextzustände …';worker.onmessage=ev=>{const x=ev.data;if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';status.textContent=(x.phase==='scan'?'Text scannen':x.phase==='close'?'Deterministische Folgezustände schließen':'Übergänge schreiben')+` · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;stats.innerHTML=`<span class="pill">${x.contexts.toLocaleString('de-DE')} Zustände bisher</span>`}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}-n${x.N}.tm.json.gz`;bar.style.width='100%';status.textContent='Fertig.';stats.innerHTML=`<span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} Zustände</span><span class="pill">Modal ${(100*x.meta.modal_top1).toFixed(3)} %</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>TM JSON erzeugt.</b> Dieses Artefakt enthält die klassische Übergangstabelle, keine ReLU-Gewichte.</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify(x.meta,null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,N,name:loadedName});};
+const mode=document.getElementById('mode'),order=document.getElementById('order');
+mode.onchange=()=>{order.disabled=mode.value==='auto'};
+btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const manualN=Math.max(1,+order.value||8);if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent=mode.value==='auto'?'AUTO: suche kleinstes eindeutiges n …':'Erzeuge Kontextzustände …';let foundN=null;worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase'){status.textContent=x.message}else if(x.kind==='auto-test'){status.textContent=`AUTO prüft n=${x.N} · ${x.ok?'eindeutig':'noch mehrdeutig'}`;stats.innerHTML=`<span class="pill">n=${x.N}</span><span class="pill ${x.ok?'good':'warn'}">${x.ok?'100 % deterministisch':'Konflikt gefunden'}</span>`}else if(x.kind==='auto-found'){foundN=x.N;status.textContent=`AUTO gefunden: kleinstes eindeutiges n = ${x.N}. Erzeuge TM JSON …`;stats.innerHTML=`<span class="pill good">n=${x.N} minimal</span>`;bar.style.width='0%'}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';if(x.phase==='auto-scan'){status.textContent=`AUTO prüft n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else{status.textContent=(x.phase==='scan'?'Text scannen':x.phase==='close'?'Folgezustände schließen':'Übergänge schreiben')+` · n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}stats.innerHTML=`<span class="pill">${x.contexts.toLocaleString('de-DE')} Zustände bisher</span>${foundN?`<span class="pill good">n=${foundN}</span>`:''}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}-n${x.N}.tm.json.gz`;bar.style.width='100%';status.textContent=`Fertig · n=${x.N}.`;stats.innerHTML=`<span class="pill good">n=${x.N}${x.meta.context_selection==='auto-min-deterministic'?' minimal':''}</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} Zustände</span><span class="pill">${x.meta.deterministic_successor?'100 % eindeutig':`Modal ${(100*x.meta.modal_top1).toFixed(3)} %`}</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>TM JSON erzeugt.</b> ${x.meta.context_selection==='auto-min-deterministic'?`AUTO hat <b>n=${x.N}</b> als kleinstes vollständig eindeutiges n gefunden.`:`Manueller Modus mit n=${x.N}.`}</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify({...x.meta,auto_tests:x.tests},null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,mode:mode.value,N:manualN,name:loadedName});};
 stopBtn.onclick=()=>{if(worker){status.textContent='Stop angefordert …';worker.postMessage({cmd:'cancel'})}};
 </script>
 </main></body></html>
