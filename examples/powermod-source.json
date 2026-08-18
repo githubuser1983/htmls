@@ -1,0 +1,10276 @@
+{
+  "name": "binary_modmul_full_mt",
+  "description": "Complete deterministic 5-tape TM for (a*b) mod p. The finite control includes the outer loop/controller and in-place shift, increment, add, compare, and subtract subroutines; no external arithmetic orchestration is required.",
+  "num_tapes": 5,
+  "blank": "_",
+  "tape_alphabet": [
+    "_",
+    "0",
+    "1",
+    "#"
+  ],
+  "input_convention": {
+    "tape_0_A": "MSB-first binary digits followed by #",
+    "tape_1_B": "LSB-first binary digits followed by #",
+    "tape_2_P": "W LSB-first modulus digits, zero-padded, followed by #",
+    "tape_3_X": "W zero digits followed by #",
+    "tape_4_R": "W zero digits followed by #; final result is here LSB-first",
+    "width_rule": "W >= bit_length(p)+2",
+    "heads": "all start at cell 0"
+  },
+  "start_state": "REDUCE_READ",
+  "halt_states": [
+    "HALT"
+  ],
+  "states": [
+    "HALT",
+    "MULT_READ",
+    "MUL_ADD_C0",
+    "MUL_ADD_C1",
+    "MUL_ADD_REWIND",
+    "MUL_R_CMP_EQ",
+    "MUL_R_CMP_GE",
+    "MUL_R_CMP_LT",
+    "MUL_R_CMP_SEEK",
+    "MUL_R_SUB_B0",
+    "MUL_R_SUB_B1",
+    "MUL_R_SUB_REWIND",
+    "MUL_X_CMP_EQ",
+    "MUL_X_CMP_GE",
+    "MUL_X_CMP_LT",
+    "MUL_X_CMP_SEEK",
+    "MUL_X_SHIFT_C0",
+    "MUL_X_SHIFT_C1",
+    "MUL_X_SHIFT_REWIND",
+    "MUL_X_SHIFT_START",
+    "MUL_X_SUB_B0",
+    "MUL_X_SUB_B1",
+    "MUL_X_SUB_REWIND",
+    "REDUCE_READ",
+    "RED_CMP_EQ",
+    "RED_CMP_GE",
+    "RED_CMP_LT",
+    "RED_CMP_SEEK",
+    "RED_INC",
+    "RED_INC_REWIND",
+    "RED_SHIFT_A0_C0",
+    "RED_SHIFT_A0_C1",
+    "RED_SHIFT_A1_C0",
+    "RED_SHIFT_A1_C1",
+    "RED_SHIFT_REWIND_A0",
+    "RED_SHIFT_REWIND_A1",
+    "RED_SUB_B0",
+    "RED_SUB_B1",
+    "RED_SUB_REWIND"
+  ],
+  "transitions": {
+    "REDUCE_READ": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_A0_C0": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_A0_C1": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|0|0": {
+        "next_state": "RED_SHIFT_A0_C0",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|1|0": {
+        "next_state": "RED_SHIFT_A0_C1",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_REWIND_A0": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_A1_C0": {
+      "1|0|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|#|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_A1_C1": {
+      "1|0|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|0|0": {
+        "next_state": "RED_SHIFT_A1_C0",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|1|0": {
+        "next_state": "RED_SHIFT_A1_C1",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_SHIFT_REWIND_A1": {
+      "1|0|0|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|_|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|_|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|_|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SHIFT_REWIND_A1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|_|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_INC": {
+      "1|0|0|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_INC",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_INC_REWIND": {
+      "1|0|0|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_INC_REWIND",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|_|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_CMP_SEEK": {
+      "0|0|0|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|#|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|#|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|#|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_CMP_SEEK",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|#|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "RED_CMP_EQ": {
+      "0|0|0|0|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_CMP_EQ",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_CMP_GE": {
+      "0|0|0|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_CMP_GE",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|_|_|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_CMP_LT": {
+      "0|0|0|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "0",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "0",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "1",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_CMP_LT",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "1",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_SUB_B0": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|#|#|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|#|#|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|#|#|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|#|#|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "RED_SUB_B1": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SUB_B0",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SUB_B1",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "RED_SUB_REWIND": {
+      "0|0|0|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|0|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|1|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|0|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "0",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "0|1|0|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|0|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|1|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "0",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "0|1|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "0",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|0|0|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|0|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|1|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|0|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "1",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "1|1|0|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|0|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|0|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|1|1|0": {
+        "next_state": "RED_SUB_REWIND",
+        "write": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "1|1|_|_|0": {
+        "next_state": "REDUCE_READ",
+        "write": [
+          "1",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "R",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MULT_READ": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|0|0|0": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|0|0|1": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|0|1|0": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|0|1|1": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|1|0|0": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|1|0|1": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|1|1|0": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      },
+      "#|#|1|1|1": {
+        "next_state": "HALT",
+        "write": [
+          "#",
+          "#",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "S",
+          "S"
+        ]
+      }
+    },
+    "MUL_ADD_C0": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|#|#": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "#",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|#|#": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "#",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      }
+    },
+    "MUL_ADD_C1": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_ADD_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_ADD_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      }
+    },
+    "MUL_ADD_REWIND": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|0|_|_": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "_",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_ADD_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "L"
+        ]
+      },
+      "#|1|1|_|_": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "_",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "R"
+        ]
+      }
+    },
+    "MUL_R_CMP_SEEK": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|#|0|#": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "0",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|#|1|#": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "1",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      }
+    },
+    "MUL_R_CMP_EQ": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|0|_": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "0",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|1|_": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "1",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      }
+    },
+    "MUL_R_CMP_GE": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|0|_": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "0",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|1|_": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "1",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      }
+    },
+    "MUL_R_CMP_LT": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|0|_": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "0",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|1|_": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "1",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      }
+    },
+    "MUL_R_SUB_B0": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|#|0|#": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "0",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|#|1|#": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "1",
+          "#"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      }
+    },
+    "MUL_R_SUB_B1": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      }
+    },
+    "MUL_R_SUB_REWIND": {
+      "#|1|0|0|0": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|0|_": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "0",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_R_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "S",
+          "L"
+        ]
+      },
+      "#|1|_|1|_": {
+        "next_state": "MUL_X_SHIFT_START",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "1",
+          "_"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "S",
+          "R"
+        ]
+      }
+    },
+    "MUL_X_SHIFT_START": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SHIFT_C0": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|#|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|#|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|#|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|#|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|#|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|#|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|#|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|#|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SHIFT_C1": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SHIFT_C0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SHIFT_C1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SHIFT_REWIND": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|_|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|_|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|_|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|_|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|_|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|_|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|_|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SHIFT_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|_|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "S",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_CMP_SEEK": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|#|#|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|#|#|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "#",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|#|#|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_CMP_SEEK",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|#|#|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_CMP_EQ": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_CMP_EQ",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_CMP_GE": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_CMP_GE",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_CMP_LT": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|1": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_CMP_LT",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|1": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SUB_B0": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|#|#|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|#|#|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "#",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|#|#|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "#",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|#|#|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "#",
+          "#",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SUB_B1": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SUB_B0",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SUB_B1",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    },
+    "MUL_X_SUB_REWIND": {
+      "#|0|0|0|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|0|0|0|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|0|1|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|0|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|1|1|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "0",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|0|_|_|1": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "0",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|0": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "0"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|0": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "0"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      },
+      "#|1|0|0|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|0|1|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "0",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|0|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "0",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|1|1|1": {
+        "next_state": "MUL_X_SUB_REWIND",
+        "write": [
+          "#",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "move": [
+          "S",
+          "S",
+          "L",
+          "L",
+          "S"
+        ]
+      },
+      "#|1|_|_|1": {
+        "next_state": "MULT_READ",
+        "write": [
+          "#",
+          "1",
+          "_",
+          "_",
+          "1"
+        ],
+        "move": [
+          "S",
+          "R",
+          "R",
+          "R",
+          "S"
+        ]
+      }
+    }
+  }
+}

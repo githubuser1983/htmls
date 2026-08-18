@@ -1,0 +1,45 @@
+{
+  "name": "increment-one-bit-demo",
+  "description": "Tiny one-tape example",
+  "num_tapes": 1,
+  "blank": "_",
+  "tape_alphabet": [
+    "_",
+    "0",
+    "1",
+    "#"
+  ],
+  "input_convention": {
+    "tape_0": "example tape contents"
+  },
+  "start_state": "q0",
+  "halt_states": [
+    "HALT"
+  ],
+  "states": [
+    "q0",
+    "HALT"
+  ],
+  "transitions": {
+    "q0": {
+      "0": {
+        "next_state": "HALT",
+        "write": [
+          "1"
+        ],
+        "move": [
+          "S"
+        ]
+      },
+      "1": {
+        "next_state": "HALT",
+        "write": [
+          "0"
+        ],
+        "move": [
+          "S"
+        ]
+      }
+    }
+  }
+}
