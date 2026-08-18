@@ -11,7 +11,7 @@
 <body><main>
 <h1>Compile TM JSON · Text → klassische n‑Gramm‑TM</h1>
 <div class="card">
-<p>Diese Stufe erzeugt <b>nur die deterministische Turingmaschine</b>. Jeder beobachtete n‑Gramm‑Kontext wird ein Zustand. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den Suffix‑Folgezustand. Noch keine ReLU‑Gewichte.</p>
+<p>Diese Stufe erzeugt <b>die deterministische Turingmaschine</b>. Jeder beobachtete n‑Gramm‑Kontext wird ein Zustand. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den Suffix‑Folgezustand. Zusätzlich wird der Quelltext komprimiert im JSON-Artefakt mitgeführt, damit <code>compile-growing.html</code> daraus das Curriculum n=1,2,…,N exakt wieder aufbauen kann. Noch keine ReLU‑Gewichte.</p>
 <input id="file" type="file" accept=".txt,text/plain">
 <div class="row" style="margin-top:12px">
   <div class="field"><label>Kontextordnung</label>
@@ -25,7 +25,7 @@
 <small>AUTO prüft 1, 2, 4, 8, … und sucht danach binär das kleinste n, bei dem jeder beobachtete Kontext genau einen Nachfolger besitzt.</small>
 <div class="row" style="margin-top:12px"><button id="compile">TM JSON erzeugen</button><button id="stop" class="danger" disabled>Stop</button></div>
 </div>
-<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie ist die Ground‑Truth‑Übergangstabelle für den Growing‑Compiler.</small></div>
+<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie enthält die finale Ground‑Truth‑Übergangstabelle plus den Quelltext für das Growing-Curriculum. Durch gzip ist der Textanteil normalerweise stark komprimiert.</small></div>
 <script>
 const MAX_INPUT_BYTES=32*1024*1024;
 const file=document.getElementById('file'),btn=document.getElementById('compile'),stopBtn=document.getElementById('stop'),status=document.getElementById('status'),bar=document.getElementById('bar'),stats=document.getElementById('stats'),result=document.getElementById('result');
@@ -100,7 +100,8 @@ async function build(prep,N,name,selection){
    format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand = n-Gramm-Kontext; gelesen wird Blank; Aktion schreibt den beobachteten bzw. modal gewählten Nachfolger und bewegt R.',num_tapes:1,
    alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:startState,halt_states:haltStates,state_count:keys.length,
    transitions,move_encoding:{S:0,R:1,L:2},
-   source:{file:name,chars:chars.length,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed.length,total_states:keys.length,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/chars.length,padding:'BOS state-only symbol, not part of tape alphabet',state_id_assignment:'lexicographic order of encoded context'}
+   source:{file:name,chars:chars.length,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed.length,total_states:keys.length,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/chars.length,padding:'BOS state-only symbol, not part of tape alphabet',state_id_assignment:'lexicographic order of encoded context',curriculum_embedded:true},
+   curriculum:{format:'NGRAM_CURRICULUM1',text:chars.join(''),max_order:N,target_rule:'modal successor per context; tie -> lower source symbol id',stage_state_indexing:'lexicographic n-gram rank within each stage; Growing uses one fixed binary width derived from final state_count',read_symbol_id:0,move:'R'}
  };
  return obj;
 }
