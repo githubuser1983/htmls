@@ -3,29 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Compile TM JSON</title>
+<title>Compile TM JSON · Ziel-Texttreue</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:940px;margin:auto;padding:16px}a{color:#8ab4ff}h1{font-size:22px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{flex:1 1 160px}.field label{display:block;color:#bbb;font-size:13px;margin-bottom:4px}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block;touch-action:manipulation}button.secondary,.btn.secondary{background:#444}button.danger{background:#8b2f2f}button:disabled{opacity:.45}input[type=file],input[type=number]{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px}.muted,small{color:#aaa}.good{color:#8ee29b}.warn{color:#ffd27d}.err{color:#ff9a9a}.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:#2f6fed;width:0}.pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#2a2a2a;margin:2px 4px 2px 0;font-size:13px}code{background:#222;padding:2px 5px;border-radius:5px}pre{white-space:pre-wrap;overflow:auto}details{margin-top:8px}
+*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:960px;margin:auto;padding:16px}a{color:#8ab4ff}h1{font-size:22px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{flex:1 1 170px}.field label{display:block;color:#bbb;font-size:13px;margin-bottom:4px}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block;touch-action:manipulation}button.danger{background:#8b2f2f}button:disabled{opacity:.45}input[type=file],input[type=number]{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px}.muted,small{color:#aaa}.good{color:#8ee29b}.warn{color:#ffd27d}.err{color:#ff9a9a}.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:#2f6fed;width:0}.pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#2a2a2a;margin:2px 4px 2px 0;font-size:13px}code{background:#222;padding:2px 5px;border-radius:5px}pre{white-space:pre-wrap;overflow:auto}details{margin-top:8px}
 </style>
 </head>
 <body><main>
-<h1>Compile TM JSON · Text → klassische n‑Gramm‑TM</h1>
+<h1>Compile TM JSON · kurze n‑Gramme bis Ziel-Texttreue</h1>
 <div class="card">
-<p>Diese Stufe erzeugt <b>die deterministische Turingmaschine</b>. Der Zustand an Position <i>i</i> ist ausschließlich der Kontext aus den letzten <i>n</i> bereits gesehenen Zeichen des Präfixes <code>text[0:i]</code> (links mit BOS aufgefüllt) – niemals zukünftige Zeichen. Die Maschine liest auf dem frischen Ausgabefeld das Blank, schreibt den modal gewählten Nachfolger, bewegt den Kopf nach rechts und wechselt in den neuen Vergangenheitskontext. Für das Growing-Curriculum erhalten alle Zustände über n=1,…,N eine gemeinsame, opake globale ID. Zusätzlich wird der Quelltext komprimiert im JSON-Artefakt mitgeführt. Noch keine ReLU‑Gewichte.</p>
+<p>Diese Stufe baut nur die <b>klassische deterministische Text-TM</b>. Gemessen wird billig und eindeutig: an jeder Textposition sieht das Modell den <b>wahren bereits gelesenen Präfix</b>; aktiv ist der längste ausgewählte Suffix-Kontext und dessen häufigster nächster Buchstabe wird geprüft. Das ist Teacher-Forced Next-Character-Accuracy, nicht autonome Vollkopie.</p>
 <input id="file" type="file" accept=".txt,text/plain">
 <div class="row" style="margin-top:12px">
-  <div class="field"><label>Kontextordnung</label>
-    <select id="mode" style="width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px">
-      <option value="auto" selected>AUTO · kleinstes vollständig eindeutiges n</option>
-      <option value="manual">Manuell</option>
-    </select>
-  </div>
-  <div class="field"><label>n (nur manuell)</label><input id="order" type="number" min="1" value="8" disabled></div>
+ <div class="field"><label>Ziel-Texttreue (%)</label><input id="target" type="number" min="1" max="100" step="0.01" value="95"></div>
+ <div class="field"><label>Max. n als Sicherheitsgrenze</label><input id="maxn" type="number" min="1" max="512" step="1" value="64"></div>
 </div>
-<small>AUTO prüft 1, 2, 4, 8, … und sucht danach binär das kleinste n, bei dem jeder beobachtete Kontext genau einen Nachfolger besitzt.</small>
-<div class="row" style="margin-top:12px"><button id="compile">TM JSON erzeugen</button><button id="stop" class="danger" disabled>Stop</button></div>
+<small>AUTO nimmt zuerst das kleinste n, mit dem das Ziel überhaupt erreichbar ist. Danach wird ein suffix-geschlossener Kontextbaum budgetiert: kurze Kontexte müssen vor längeren vorhanden sein; bevorzugt werden Äste mit hohem zusätzlichem Fehlergewinn. Q ist die tatsächlich gewählte Zustandszahl. N ist minimal für die gewählte Genauigkeitsmetrik; Q ist greedy klein, nicht als globales Minimum bewiesen.</small>
+<div class="row" style="margin-top:12px"><button id="compile">AUTO N + Q → TM JSON</button><button id="stop" class="danger" disabled>Stop</button></div>
 </div>
-<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Die Ausgabe heißt <code>…tm.json.gz</code>. Sie enthält die finale Ground‑Truth‑Übergangstabelle, die gemeinsame Curriculum-Indizierung und den Quelltext. Die Zustands-IDs sind opake Nummern; der Kontext selbst steckt nicht in der ReLU-Eingabedimension.</small></div>
+<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Ausgabe: <code>…-p95-nN-qQ.tm.json.gz</code>. Die ReLU-Stufe soll anschließend <b>100 % der Übergänge dieser TM</b> lernen. Der Quelltext wird nur zur Auditierbarkeit im Artefakt mitgeführt; die ReLU benötigt ihn nicht.</small></div>
 <script>
 const MAX_INPUT_BYTES=32*1024*1024;
 const file=document.getElementById('file'),btn=document.getElementById('compile'),stopBtn=document.getElementById('stop'),status=document.getElementById('status'),bar=document.getElementById('bar'),stats=document.getElementById('stats'),result=document.getElementById('result');
@@ -36,102 +31,106 @@ const workerCode=String.raw`
 let cancelled=false;
 function tick(){return new Promise(r=>setTimeout(r,0))}
 function chooseBlank(chars){const used=new Set(chars);for(let cp=0xE000;cp<=0xF8FF;cp++){const c=String.fromCharCode(cp);if(!used.has(c))return c}throw Error('Kein freies internes Blank-Symbol gefunden.')}
-function addCount(z,y){if(z.first===y){z.firstCount++;z.total++;return}if(!z.other)z.other=new Map();z.other.set(y,(z.other.get(y)||0)+1);z.total++}
-function bestY(z){let y=z.first,c=z.firstCount;if(z.other)for(const [yy,cc] of z.other){if(cc>c||(cc===c&&yy<y)){y=yy;c=cc}}return [y,c]}
-function keyFromRing(ring){let s='';for(let i=0;i<ring.length;i++)s+=String.fromCharCode(ring[i]+1);return s}
-function prepare(text){
- const chars=Array.from(text);if(chars.length<2)throw Error('Text zu kurz.');
- const alphabet=[...new Set(chars)].sort();if(alphabet.length>65000)throw Error('Zu viele verschiedene Zeichen.');
- const blank=chooseBlank(chars),sym=new Map(alphabet.map((c,i)=>[c,i])),ids=chars.map(c=>sym.get(c)),V=alphabet.length,pad=V;
- return {chars,alphabet,blank,ids,V,pad};
-}
-async function isDeterministic(ids,V,N){
- const pad=V,ring=new Uint16Array(N);ring.fill(pad);const seen=new Map();
- for(let i=0;i<ids.length;i++){
-   if(cancelled)throw Error('Abgebrochen.');
-   const key=keyFromRing(ring),y=ids[i],old=seen.get(key);
-   if(old===undefined)seen.set(key,y);else if(old!==y)return {ok:false,at:i,contexts:seen.size};
-   for(let p=0;p<N-1;p++)ring[p]=ring[p+1];ring[N-1]=y;
-   if((i&32767)===0){postMessage({kind:'progress',phase:'auto-scan',N,done:i,total:ids.length,contexts:seen.size});await tick()}
- }
- return {ok:true,at:ids.length,contexts:seen.size};
-}
-async function findAutoN(ids,V){
- const L=ids.length;let tests=[];
- let r=await isDeterministic(ids,V,1);tests.push([1,r.ok]);postMessage({kind:'auto-test',N:1,ok:r.ok,tests});
- if(r.ok)return {N:1,tests};
- let bad=1,hi=Math.min(L,2);
- while(true){
-   r=await isDeterministic(ids,V,hi);tests.push([hi,r.ok]);postMessage({kind:'auto-test',N:hi,ok:r.ok,tests});
-   if(r.ok)break;
-   bad=hi;if(hi>=L)throw Error('Interner Fehler: selbst n = Textlänge wurde nicht deterministisch.');
-   hi=Math.min(L,hi*2);
- }
- while(bad+1<hi){
-   const mid=Math.floor((bad+hi)/2);r=await isDeterministic(ids,V,mid);tests.push([mid,r.ok]);postMessage({kind:'auto-test',N:mid,ok:r.ok,tests});
-   if(r.ok)hi=mid;else bad=mid;
- }
- return {N:hi,tests};
-}
 function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a}
 function hash32(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h>>>0}
 function chooseAffine(total,seedText){if(total<=1)return {a:1,b:0,modulus:1};let a=Math.min(65521,total-1);if((a&1)===0)a--;while(a>1&&gcd(a,total)!==1)a-=2;if(a<=1)a=1;const b=hash32(seedText)%total;return {a,b,modulus:total}}
-function opaqueId(g,aff){return (aff.a*g+aff.b)%aff.modulus}
-async function advanceLocal(ids,V,n,prev,L){
- const base=L+2,seen=new Map(),ctx=new Uint32Array(L+1);
- for(let i=0;i<=L;i++){
-   const left=(i-n>=0)?ids[i-n]:V,pr=prev?prev[i]:0,key=left*base+pr;
-   let id=seen.get(key);if(id===undefined){id=seen.size;seen.set(key,id)}ctx[i]=id;
-   if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'index',N:n,done:i,total:L+1,contexts:seen.size});await tick()}
- }
- return {ctx,count:seen.size};
+function opaqueId(local,aff){return aff.modulus<=1?0:(aff.a*local+aff.b)%aff.modulus}
+function addCount(z,y){if(z.first===y){z.firstCount++;z.total++;z.dist.set(y,z.firstCount);return}z.dist.set(y,(z.dist.get(y)||0)+1);z.total++}
+function bestOf(z){let by=z.first,bc=0;for(const [y,c] of z.dist){if(c>bc||(c===bc&&y<by)){by=y;bc=c}}z.best=by;z.bestCount=bc;return z}
+function countOf(z,y){return z.dist.get(y)||0}
+function makeNode(key,len,y){const d=new Map();d.set(y,1);return {key,len,first:y,firstCount:1,dist:d,total:1,best:y,bestCount:1,gain:0,submax:0,children:[]}}
+class Heap{
+ constructor(cmp){this.a=[];this.cmp=cmp}
+ get size(){return this.a.length}
+ push(x){const a=this.a;a.push(x);let i=a.length-1;while(i){const p=(i-1)>>1;if(!this.cmp(a[i],a[p]))break;[a[i],a[p]]=[a[p],a[i]];i=p}}
+ pop(){const a=this.a;if(!a.length)return null;const root=a[0],last=a.pop();if(a.length){a[0]=last;let i=0;for(;;){let l=i*2+1,r=l+1,b=i;if(l<a.length&&this.cmp(a[l],a[b]))b=l;if(r<a.length&&this.cmp(a[r],a[b]))b=r;if(b===i)break;[a[i],a[b]]=[a[b],a[i]];i=b}}return root}
 }
-async function build(prep,N,name,selection){
- const {chars,alphabet,blank,ids,V}=prep,L=ids.length;
- const stageOffsets=[],stageCounts=[];let prev=null,finalCtx=null,total=0;
- for(let n=1;n<=N;n++){
-   const z=await advanceLocal(ids,V,n,prev,L);stageOffsets.push(total);stageCounts.push(z.count);total+=z.count;prev=z.ctx;
-   if(n===N)finalCtx=z.ctx;
-   postMessage({kind:'stage-indexed',N:n,maxN:N,states:z.count,totalStates:total});
-   if(total>0xFFFFFFFF)throw Error('Zu viele Curriculum-Zustände für die aktuelle 32-Bit-ID-Realisierung.');
+function prepare(text){
+ const chars=Array.from(text);if(chars.length<2)throw Error('Text zu kurz.');
+ const alphabet=[...new Set(chars)].sort();if(alphabet.length>65000)throw Error('Zu viele verschiedene Zeichen.');
+ const blank=chooseBlank(chars),sym=new Map(alphabet.map((c,i)=>[c,i])),ids=new Uint16Array(chars.length);for(let i=0;i<chars.length;i++)ids[i]=sym.get(chars[i]);
+ let encoded='';const CH=8192;for(let i=0;i<ids.length;i+=CH){const a=[];for(let j=i;j<Math.min(ids.length,i+CH);j++)a.push(ids[j]+1);encoded+=String.fromCharCode(...a)}
+ return {chars,alphabet,blank,ids,V:alphabet.length,encoded};
+}
+async function searchN(prep,target,maxN){
+ const {ids,encoded}=prep,L=ids.length,rootKey='';
+ const nodes=new Map(),levels=[[]];
+ const root=makeNode('',0,ids[0]);root.dist=new Map();root.total=L;for(let i=0;i<L;i++)root.dist.set(ids[i],(root.dist.get(ids[i])||0)+1);bestOf(root);nodes.set('',root);levels[0].push(root);
+ const curve=[];
+ for(let n=1;n<=maxN;n++){
+   const level=[];levels[n]=level;
+   for(let i=n;i<L;i++){
+     if(cancelled)throw Error('Abgebrochen.');
+     const key=encoded.slice(i-n,i),y=ids[i];let z=nodes.get(key);
+     if(!z){z=makeNode(key,n,y);nodes.set(key,z);level.push(z)}else addCount(z,y);
+     if((i&32767)===0){postMessage({kind:'progress',phase:'nscan',n,done:i,total:L,nodes:nodes.size});await tick()}
+   }
+   for(const z of level)bestOf(z);
+   let good=0;
+   for(let i=0;i<L;i++){
+     const k=Math.min(n,i),key=k?encoded.slice(i-k,i):rootKey,z=nodes.get(key)||root;if(z.best===ids[i])good++;
+     if((i&65535)===0&&i){if(cancelled)throw Error('Abgebrochen.');await tick()}
+   }
+   const acc=good/L;curve.push({n,accuracy:acc,contexts:nodes.size});postMessage({kind:'n-result',n,accuracy:acc,contexts:nodes.size,target});
+   if(acc+1e-15>=target)return {N:n,nodes,levels,root,fullCorrect:good,fullAccuracy:acc,curve};
  }
- const aff=chooseAffine(total,name+'|'+L+'|'+N+'|'+V),offset=stageOffsets[N-1],finalCount=stageCounts[N-1];
- const gid=local=>opaqueId(offset+local,aff);
- const rec=new Array(finalCount);let observed=0;
+ throw Error('Ziel '+(100*target).toFixed(3)+' % bis n='+maxN+' nicht erreicht. Sicherheitsgrenze erhöhen oder Ziel senken.');
+}
+async function chooseBudget(found,prep,target){
+ const {N,nodes,levels,root}=found,L=prep.ids.length,targetCorrect=Math.ceil(target*L-1e-12);
+ for(let n=1;n<=N;n++)for(const z of levels[n]){
+   const parent=nodes.get(z.key.slice(1));if(!parent)throw Error('Interner Fehler: Suffix-Elternzustand fehlt.');z.parent=parent;parent.children.push(z);z.gain=z.bestCount-countOf(z,parent.best);z.submax=z.gain;
+ }
+ for(let n=N;n>=1;n--)for(const z of levels[n]){if(z.submax>z.parent.submax)z.parent.submax=z.submax}
+ let correct=root.bestCount;const selected=new Set(['']);
+ const cmp=(a,b)=>a.submax!==b.submax?a.submax>b.submax:a.gain!==b.gain?a.gain>b.gain:a.len!==b.len?a.len<b.len:a.total!==b.total?a.total>b.total:a.key<b.key;
+ const heap=new Heap(cmp);for(const c of root.children)heap.push(c);
+ let steps=0;
+ while(correct<targetCorrect){
+   if(cancelled)throw Error('Abgebrochen.');const z=heap.pop();if(!z)throw Error('Interner Fehler: Budgetsuche erschöpft.');if(selected.has(z.key))continue;
+   selected.add(z.key);correct+=z.gain;steps++;for(const c of z.children)heap.push(c);
+   if((steps&1023)===0){postMessage({kind:'budget',q:selected.size,correct,total:L,accuracy:correct/L,frontier:heap.size,n:N});await tick()}
+ }
+ // Unabhängige Vollprüfung der Metrik über den tatsächlichen längsten ausgewählten Suffix.
+ let verified=0;
  for(let i=0;i<L;i++){
-   const s=finalCtx[i],y=ids[i];let r=rec[s];if(!r){r={first:y,firstCount:1,other:null,total:1,best:-1,bestCount:0};rec[s]=r;observed++}else addCount(r,y);
-   if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'scan',N,done:i,total:L,contexts:observed});await tick()}
+   let z=root;for(let k=Math.min(N,i);k>=1;k--){const key=prep.encoded.slice(i-k,i);if(selected.has(key)){z=nodes.get(key);break}}if(z.best===prep.ids[i])verified++;
+   if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'verify-text',n:N,done:i,total:L,nodes:selected.size});await tick()}
  }
- let modalCorrect=0,ambiguous=0;const best=new Int32Array(finalCount);best.fill(-1);
- for(let s=0;s<finalCount;s++){const r=rec[s];if(!r)continue;const [y,c]=bestY(r);r.best=y;r.bestCount=c;best[s]=y;modalCorrect+=c;if(c!==r.total)ambiguous++}
- const target=new Int32Array(finalCount);target.fill(-1);
- for(let i=0;i<L;i++){const s=finalCtx[i];if(target[s]<0&&ids[i]===best[s])target[s]=finalCtx[i+1]}
- const transitions=[];
- for(let s=0;s<finalCount;s++){
-   if(!rec[s])continue;if(target[s]<0)throw Error('Interner Folgezustand fehlt.');transitions.push([gid(s),0,gid(target[s]),best[s]+1,'R']);
-   if((transitions.length&8191)===0){postMessage({kind:'progress',phase:'rows',N,done:transitions.length,total:observed,contexts:finalCount});await tick()}
+ if(verified!==correct)throw Error('Interner Fehler: inkrementelle und direkte Texttreue stimmen nicht überein ('+correct+' vs '+verified+').');
+ return {selected,correct,accuracy:correct/L,Q:selected.size,steps};
+}
+function suffixNext(key,y,N,selected){let seq=key+String.fromCharCode(y+1);if(seq.length>N)seq=seq.slice(seq.length-N);while(seq.length&&!selected.has(seq))seq=seq.slice(1);return selected.has(seq)?seq:''}
+async function buildTM(prep,found,budget,name,target){
+ const {alphabet,blank,ids}=prep,{N,nodes,curve,fullAccuracy}=found,{selected,Q,accuracy}=budget;
+ const keys=[...selected].sort((a,b)=>a.length-b.length||(a<b?-1:a>b?1:0)),local=new Map(keys.map((k,i)=>[k,i])),aff=chooseAffine(Q,name+'|'+ids.length+'|'+N+'|'+Q),transitions=[];
+ let ambiguous=0;
+ for(let i=0;i<keys.length;i++){
+   const key=keys[i],z=nodes.get(key),y=z.best,next=suffixNext(key,y,N,selected),ns=local.get(next);if(ns===undefined)throw Error('Interner Folgezustand fehlt.');if(z.dist.size>1)ambiguous++;
+   transitions.push([opaqueId(i,aff),0,opaqueId(ns,aff),y+1,'R']);
+   if((i&8191)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'rows',n:N,done:i,total:keys.length,nodes:Q});await tick()}
  }
- const terminalLocal=finalCtx[L],haltStates=rec[terminalLocal]?[]:[gid(terminalLocal)],startState=gid(finalCtx[0]),fullAlphabet=[blank,...alphabet];
- const obj={
-   format:'TMJSON1',name:name+' n'+N+' TM JSON',description:'Deterministische 1-Band-n-Gramm-Text-TM. Zustand an Position i = letzte n bereits gelesene Zeichen des Präfixes text[0:i], links BOS-gepadet. Gelesen wird Blank; Aktion schreibt den modal gewählten Nachfolger und bewegt R.',num_tapes:1,
-   alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:startState,halt_states:haltStates,state_count:total,
-   transitions,move_encoding:{S:0,R:1,L:2},
-   source:{file:name,chars:L,context_order:N,context_selection:selection,source_alphabet_size:V,observed_contexts:observed,final_stage_states:finalCount,global_curriculum_states:total,ambiguous_contexts:ambiguous,deterministic_successor:ambiguous===0,modal_top1:modalCorrect/L,padding:'BOS state-only symbol, not part of tape alphabet',context_semantics:'state before text[i] is last n symbols of already-seen prefix text[0:i], left padded with BOS',state_id_assignment:'opaque affine permutation of global curriculum ordinal; IDs shared and non-reused across n=1..N',curriculum_embedded:true},
-   curriculum:{format:'NGRAM_CURRICULUM2',text:chars.join(''),max_order:N,target_rule:'modal successor per past-context; tie -> lower source symbol id',context_semantics:'past-only prefix context: last n symbols of text[0:i], BOS padded',local_indexing:'first occurrence of each context among prefix positions 0..L',stage_offsets:stageOffsets,stage_state_counts:stageCounts,global_state_count:total,state_id_permutation:{kind:'affine_mod',a:aff.a,b:aff.b,modulus:aff.modulus},read_symbol_id:0,move:'R'}
+ const fullAlphabet=[blank,...alphabet],obj={
+   format:'TMJSON1',name:name+' · target '+(100*target).toFixed(2)+'% n-gram TM',description:'Deterministische 1-Band-Textgenerator-TM aus einem budgetierten suffix-geschlossenen Vergangenheitskontextbaum. Texttreue = teacher-forced Next-Character-Accuracy auf dem Quelltext. Jede TM-Zustandsaktion ist danach deterministisch: modal gewähltes Zeichen schreiben, R, längster ausgewählter Suffix als Folgezustand.',num_tapes:1,
+   alphabet:fullAlphabet,blank,blank_symbol_id:0,start_state:opaqueId(local.get(''),aff),halt_states:[],state_count:Q,transitions,move_encoding:{S:0,R:1,L:2},
+   source:{file:name,chars:ids.length,source_alphabet_size:alphabet.length,target_text_accuracy:target,teacher_forced_accuracy:accuracy,metric:'teacher-forced next-character top-1 using true past prefix; active state = longest selected suffix context',context_order:N,state_budget:Q,full_context_accuracy_at_n:fullAccuracy,candidate_contexts:found.nodes.size,ambiguous_selected_contexts:ambiguous,selection:'minimal n for target; suffix-closed greedy state budget prioritized by maximum descendant error-gain',n_minimal_for_metric:true,q_global_minimum_proven:false,state_id_assignment:'opaque affine permutation of local context-state ordinal; context is not encoded in ReLU input',state_id_permutation:{kind:'affine_mod',a:aff.a,b:aff.b,modulus:aff.modulus},source_text_embedded:true},
+   evaluation:{target,achieved:accuracy,correct:budget.correct,total:ids.length,n_curve:curve},
+   source_text:prep.chars.join(''),
+   context_model:{format:'NGRAM_SUFFIX_BUDGET1',max_order:N,state_count:Q,suffix_closed:true,modal_rule:'most frequent next symbol; tie -> lower source symbol id',metric:'teacher-forced',note:'Context strings are construction metadata only; the learned ReLU controller sees opaque state IDs.'}
  };
  return obj;
 }
 async function gzipText(s){if(!self.CompressionStream)throw Error('CompressionStream fehlt; bitte aktuelles Chrome/Chromium verwenden.');const u=new TextEncoder().encode(s);const ab=await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return {raw:u.length,gz:new Uint8Array(ab)}}
 onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}if(x.cmd!=='compile')return;cancelled=false;try{
- const prep=prepare(x.text);let N=x.N,selection='manual',tests=[];
- if(x.mode==='auto'){postMessage({kind:'phase',message:'AUTO: kleinstes eindeutiges n suchen …'});const a=await findAutoN(prep.ids,prep.V);N=a.N;tests=a.tests;selection='auto-min-deterministic';postMessage({kind:'auto-found',N,tests});}
- const obj=await build(prep,N,x.name,selection);const packed=await gzipText(JSON.stringify(obj));postMessage({kind:'done',buf:packed.gz.buffer,rawSize:packed.raw,gzSize:packed.gz.length,meta:obj.source,stateCount:obj.state_count,rows:obj.transitions.length,name:x.name,N,tests},[packed.gz.buffer])
+ const prep=prepare(x.text),target=Math.max(0.000001,Math.min(1,Number(x.target))),maxN=Math.max(1,Math.min(512,x.maxN|0));
+ postMessage({kind:'phase',message:'Suche kleinstes n für die Ziel-Texttreue …'});const found=await searchN(prep,target,maxN);
+ postMessage({kind:'phase',message:'n='+found.N+' gefunden. Suche kleines Zustandsbudget Q …'});const budget=await chooseBudget(found,prep,target);
+ postMessage({kind:'phase',message:'Q='+budget.Q+' gefunden. Schreibe deterministische TM …'});const obj=await buildTM(prep,found,budget,x.name,target),packed=await gzipText(JSON.stringify(obj));
+ postMessage({kind:'done',buf:packed.gz.buffer,rawSize:packed.raw,gzSize:packed.gz.length,name:x.name,N:found.N,Q:budget.Q,target,accuracy:budget.accuracy,fullAccuracy:found.fullAccuracy,rows:obj.transitions.length,stateCount:obj.state_count,meta:obj.source,curve:found.curve},[packed.gz.buffer]);
 }catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
-`
+`;
 function setBusy(v){btn.disabled=v;stopBtn.disabled=!v}
-const mode=document.getElementById('mode'),order=document.getElementById('order');
-mode.onchange=()=>{order.disabled=mode.value==='auto'};
-btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const manualN=Math.max(1,+order.value||8);if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent=mode.value==='auto'?'AUTO: suche kleinstes eindeutiges n …':'Erzeuge Kontextzustände …';let foundN=null;worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase'){status.textContent=x.message}else if(x.kind==='stage-indexed'){status.textContent=`Gemeinsame Zustands-IDs: n=${x.N}/${x.maxN} · ${x.states.toLocaleString('de-DE')} neue Stufenzustände · ${x.totalStates.toLocaleString('de-DE')} global`;stats.innerHTML=`<span class="pill">n=${x.N}/${x.maxN}</span><span class="pill">${x.totalStates.toLocaleString('de-DE')} globale IDs</span>`}else if(x.kind==='auto-test'){status.textContent=`AUTO prüft n=${x.N} · ${x.ok?'eindeutig':'noch mehrdeutig'}`;stats.innerHTML=`<span class="pill">n=${x.N}</span><span class="pill ${x.ok?'good':'warn'}">${x.ok?'100 % deterministisch':'Konflikt gefunden'}</span>`}else if(x.kind==='auto-found'){foundN=x.N;status.textContent=`AUTO gefunden: kleinstes eindeutiges n = ${x.N}. Erzeuge TM JSON …`;stats.innerHTML=`<span class="pill good">n=${x.N} minimal</span>`;bar.style.width='0%'}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';if(x.phase==='auto-scan'){status.textContent=`AUTO prüft n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else{status.textContent=(x.phase==='index'?'Globale Zustandsindizierung':x.phase==='scan'?'Finale Vergangenheitskontexte zählen':'Übergänge schreiben')+` · n=${x.N} · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}stats.innerHTML=`<span class="pill">${x.contexts.toLocaleString('de-DE')} Zustände bisher</span>${foundN?`<span class="pill good">n=${foundN}</span>`:''}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}-n${x.N}.tm.json.gz`;bar.style.width='100%';status.textContent=`Fertig · n=${x.N}.`;stats.innerHTML=`<span class="pill good">n=${x.N}${x.meta.context_selection==='auto-min-deterministic'?' minimal':''}</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.meta.final_stage_states.toLocaleString('de-DE')} finale Zustände</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} globale IDs</span><span class="pill">${x.meta.deterministic_successor?'100 % eindeutig':`Modal ${(100*x.meta.modal_top1).toFixed(3)} %`}</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>TM JSON erzeugt.</b> ${x.meta.context_selection==='auto-min-deterministic'?`AUTO hat <b>n=${x.N}</b> als kleinstes vollständig eindeutiges n gefunden.`:`Manueller Modus mit n=${x.N}.`}</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify({...x.meta,auto_tests:x.tests},null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,mode:mode.value,N:manualN,name:loadedName});};
+btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}const target=Math.max(0.01,Math.min(100,+document.getElementById('target').value||95))/100,maxN=Math.max(1,Math.min(512,+document.getElementById('maxn').value||64));if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent='AUTO: suche kleinstes n …';worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase'){status.textContent=x.message}else if(x.kind==='n-result'){bar.style.width=(100*Math.min(1,x.accuracy/x.target)).toFixed(1)+'%';status.textContent=`n=${x.n}: ${(100*x.accuracy).toFixed(3)} % bei vollständigem Kontextbaum`;stats.innerHTML=`<span class="pill">n=${x.n}</span><span class="pill ${x.accuracy>=x.target?'good':'warn'}">${(100*x.accuracy).toFixed(3)} %</span><span class="pill">${x.contexts.toLocaleString('de-DE')} Kontextkandidaten</span>`}else if(x.kind==='budget'){bar.style.width=(100*Math.min(1,x.accuracy/target)).toFixed(1)+'%';status.textContent=`Budgetsuche bei n=${x.n}: Q=${x.q.toLocaleString('de-DE')} · ${(100*x.accuracy).toFixed(3)} %`;stats.innerHTML=`<span class="pill good">n=${x.n}</span><span class="pill">Q=${x.q.toLocaleString('de-DE')}</span><span class="pill">${(100*x.accuracy).toFixed(3)} %</span>`}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;if(x.phase==='rows'||x.phase==='verify-text')bar.style.width=(100*p).toFixed(1)+'%';status.textContent=(x.phase==='nscan'?`Kontexte für n=${x.n} zählen`:x.phase==='verify-text'?'Texttreue vollverifizieren':'TM-Übergänge schreiben')+` · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),pct=(100*x.target).toFixed(2).replace(/\.00$/,''),fn=`${loadedName}-p${pct}-n${x.N}-q${x.Q}.tm.json.gz`;bar.style.width='100%';status.textContent='TM erzeugt.';stats.innerHTML=`<span class="pill good">Texttreue ${(100*x.accuracy).toFixed(3)} %</span><span class="pill good">n=${x.N}</span><span class="pill">Q=${x.Q.toLocaleString('de-DE')}</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>Ziel erreicht.</b> Kleinstes n für die Metrik: <b>${x.N}</b>. Greedy-Budget: <b>Q=${x.Q.toLocaleString('de-DE')}</b>. Teacher-forced Texttreue: <b>${(100*x.accuracy).toFixed(3)} %</b>. Mit allen Kontexten bis n=${x.N}: ${(100*x.fullAccuracy).toFixed(3)} %.</p><p>Die nächste ReLU-Stufe soll jetzt nicht den Text zu 100 % kopieren, sondern <b>${x.rows.toLocaleString('de-DE')}/${x.rows.toLocaleString('de-DE')} TM-Übergänge = 100 %</b> lernen.</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten / n-Kurve</summary><pre>${esc(JSON.stringify({...x.meta,n_curve:x.curve},null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,target,maxN,name:loadedName});};
 stopBtn.onclick=()=>{if(worker){status.textContent='Stop angefordert …';worker.postMessage({cmd:'cancel'})}};
 </script>
 </main></body></html>
