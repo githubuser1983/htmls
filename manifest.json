@@ -1,5 +1,6 @@
 {
   "project": "ReLU-TM Lab",
+  "version": "2.0-mobile-backoff",
   "files": [
     "README.md",
     "compile-general-tm.html",
@@ -21,49 +22,49 @@
   ],
   "precompiled": [
     {
-      "file": "machines/faust-1mb.tm.gz",
       "name": "Goethe – Faust I",
-      "source": "texts/goethe-faust.txt",
-      "architecture": "structured_sparse_relu_text_v1",
-      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
-      "n": 14,
-      "top1": 0.9914917966159704,
+      "architecture": "variable_order_sparse_relu_text_v2",
+      "max_context_order": 7,
+      "fallback_orders": "1..7",
+      "top1_at_max_order": 0.8402592471778527,
       "source_chars": 187010,
-      "states_observed": 180905,
-      "minimum_prompt_chars": 14,
-      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
-      "gzip_bytes": 1043698,
-      "raw_bytes": 2714249
+      "stored_context_neurons": 276745,
+      "minimum_prompt_chars": 1,
+      "gzip_bytes": 860800,
+      "raw_bytes": 1928976,
+      "description": "Variable-order character TM represented as structured sparse ReLU context detectors with longest-known-suffix backoff.",
+      "file": "machines/faust-1mb.tm.gz",
+      "source": "texts/goethe-faust.txt"
     },
     {
-      "file": "machines/alice-1mb.tm.gz",
       "name": "Alice's Adventures in Wonderland",
-      "source": "texts/alice-wonderland.txt",
-      "architecture": "structured_sparse_relu_text_v1",
-      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
-      "n": 21,
-      "top1": 0.9963104272357554,
+      "architecture": "variable_order_sparse_relu_text_v2",
+      "max_context_order": 8,
+      "fallback_orders": "1..8",
+      "top1_at_max_order": 0.879477916978179,
       "source_chars": 143127,
-      "states_observed": 140230,
-      "minimum_prompt_chars": 21,
-      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
-      "gzip_bytes": 1027212,
-      "raw_bytes": 3085700
+      "stored_context_neurons": 260026,
+      "minimum_prompt_chars": 1,
+      "gzip_bytes": 837609,
+      "raw_bytes": 1978327,
+      "description": "Variable-order character TM represented as structured sparse ReLU context detectors with longest-known-suffix backoff.",
+      "file": "machines/alice-1mb.tm.gz",
+      "source": "texts/alice-wonderland.txt"
     },
     {
-      "file": "machines/goethe-ein-gleiches.tm.gz",
       "name": "Goethe – Ein Gleiches",
-      "source": "texts/goethe-ein-gleiches.txt",
-      "architecture": "structured_sparse_relu_text_v1",
-      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
-      "n": 32,
-      "top1": 1.0,
+      "architecture": "variable_order_sparse_relu_text_v2",
+      "max_context_order": 32,
+      "fallback_orders": "1..32",
+      "top1_at_max_order": 1.0,
       "source_chars": 139,
-      "states_observed": 107,
-      "minimum_prompt_chars": 32,
-      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
-      "gzip_bytes": 840,
-      "raw_bytes": 4120
+      "stored_context_neurons": 3703,
+      "minimum_prompt_chars": 1,
+      "gzip_bytes": 10664,
+      "raw_bytes": 66302,
+      "description": "Variable-order character TM represented as structured sparse ReLU context detectors with longest-known-suffix backoff.",
+      "file": "machines/goethe-ein-gleiches.tm.gz",
+      "source": "texts/goethe-ein-gleiches.txt"
     },
     {
       "file": "machines/powermod-5tape.tm.gz",
@@ -101,5 +102,9 @@
       "raw_bytes": 13267
     }
   ],
-  "default_model_budget_bytes": 1048576
+  "default_model_budget_bytes": 1048576,
+  "notes": [
+    "Text models use variable-order longest-known-suffix backoff.",
+    "All long compilation and run loops are executed in Web Workers."
+  ]
 }
