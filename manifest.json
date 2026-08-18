@@ -1,0 +1,105 @@
+{
+  "project": "ReLU-TM Lab",
+  "files": [
+    "README.md",
+    "compile-general-tm.html",
+    "compile-tm.html",
+    "compile.html",
+    "examples/powermod-source.json",
+    "examples/tm-json-template.json",
+    "index.html",
+    "machines/alice-1mb.tm.gz",
+    "machines/faust-1mb.tm.gz",
+    "machines/goethe-ein-gleiches.tm.gz",
+    "machines/powermod-5tape.tm.gz",
+    "manifest.json",
+    "run-tm.html",
+    "run.html",
+    "texts/alice-wonderland.txt",
+    "texts/goethe-ein-gleiches.txt",
+    "texts/goethe-faust.txt"
+  ],
+  "precompiled": [
+    {
+      "file": "machines/faust-1mb.tm.gz",
+      "name": "Goethe – Faust I",
+      "source": "texts/goethe-faust.txt",
+      "architecture": "structured_sparse_relu_text_v1",
+      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
+      "n": 14,
+      "top1": 0.9914917966159704,
+      "source_chars": 187010,
+      "states_observed": 180905,
+      "minimum_prompt_chars": 14,
+      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
+      "gzip_bytes": 1043698,
+      "raw_bytes": 2714249
+    },
+    {
+      "file": "machines/alice-1mb.tm.gz",
+      "name": "Alice's Adventures in Wonderland",
+      "source": "texts/alice-wonderland.txt",
+      "architecture": "structured_sparse_relu_text_v1",
+      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
+      "n": 21,
+      "top1": 0.9963104272357554,
+      "source_chars": 143127,
+      "states_observed": 140230,
+      "minimum_prompt_chars": 21,
+      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
+      "gzip_bytes": 1027212,
+      "raw_bytes": 3085700
+    },
+    {
+      "file": "machines/goethe-ein-gleiches.tm.gz",
+      "name": "Goethe – Ein Gleiches",
+      "source": "texts/goethe-ein-gleiches.txt",
+      "architecture": "structured_sparse_relu_text_v1",
+      "description": "Fixed-order character TM represented as a structured sparse ReLU: context shift is shared; each stored context is one exact ReLU pattern detector.",
+      "n": 32,
+      "top1": 1.0,
+      "source_chars": 139,
+      "states_observed": 107,
+      "minimum_prompt_chars": 32,
+      "weights": "context-pattern nonzero indices + modal output; repeated unit weights/bias are implicit architecture constants",
+      "gzip_bytes": 840,
+      "raw_bytes": 4120
+    },
+    {
+      "file": "machines/powermod-5tape.tm.gz",
+      "name": "binary_modmul_full_mt",
+      "architecture": "exact_sparse_relu_table_v1",
+      "description": "Complete deterministic 5-tape TM for (a*b) mod p. The finite control includes the outer loop/controller and in-place shift, increment, add, compare, and subtract subroutines; no external arithmetic orchestration is required.",
+      "num_tapes": 5,
+      "states": 39,
+      "rows": 596,
+      "blank": "_",
+      "input_convention": {
+        "tape_0_A": "MSB-first binary digits followed by #",
+        "tape_1_B": "LSB-first binary digits followed by #",
+        "tape_2_P": "W LSB-first modulus digits, zero-padded, followed by #",
+        "tape_3_X": "W zero digits followed by #",
+        "tape_4_R": "W zero digits followed by #; final result is here LSB-first",
+        "width_rule": "W >= bit_length(p)+2",
+        "heads": "all start at cell 0"
+      },
+      "weights": "each defined (state, read tuple) is one exact sparse ReLU detector with its write/move/next-state action",
+      "examples": [
+        {
+          "name": "123 × 456 mod 7",
+          "tapes": [
+            "1111011#",
+            "000100111#",
+            "11100#",
+            "00000#",
+            "00000#"
+          ]
+        }
+      ],
+      "note": "The generic runner does not parse decimal arithmetic. This sample starts directly from the TM's native five-tape binary representation; the arithmetic controller itself is entirely in the compiled machine.",
+      "gzip_bytes": 3303,
+      "raw_bytes": 13267
+    }
+  ],
+  "default_model_budget_bytes": 1048576
+}

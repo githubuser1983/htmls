@@ -1,0 +1,20 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ReLU-TM Lab</title><style>
+*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:900px;margin:auto;padding:16px}a{color:#8ab4ff}h1{font-size:22px}h2{font-size:18px;margin-top:24px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block}button.secondary,.btn.secondary{background:#444}button:disabled{opacity:.45}input[type=file],textarea{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:12px;font-size:16px}textarea{min-height:180px}small,.muted{color:#aaa}.good{color:#8ee29b}.err{color:#ff9a9a}code{background:#222;padding:2px 5px;border-radius:5px}.bar{height:8px;background:#333;border-radius:8px;overflow:hidden}.bar>div{height:100%;background:#2f6fed;width:0}.filetree{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.7}.filetree a{text-decoration:none}.tape{overflow:auto;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#080808;border-radius:10px;padding:10px;margin:7px 0}.head{background:#fff;color:#111;border-radius:4px;padding:1px 3px}.hidden{display:none!important}
+</style></head><body><main>
+<h1>ReLU-TM Lab</h1>
+<div class="card"><div class="row"><a class="btn" href="compile-tm.html">Text → TM kompilieren</a><a class="btn" href="run-tm.html">TM ausführen</a><a class="btn secondary" href="compile-general-tm.html">Allgemeine TM kompilieren</a></div></div>
+<h2>Projektdateien</h2><div class="card"><div id="tree" class="filetree">Lade Dateiliste …</div><small>Auf GitHub Pages versucht diese Seite das öffentliche Repository automatisch zu listen. Lokal wird <code>manifest.json</code> verwendet.</small></div>
+<script>
+const fallback=()=>fetch('manifest.json').then(r=>r.json()).then(m=>render(m.files));
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function render(files){const el=document.getElementById('tree');el.innerHTML=files.filter(x=>!x.startsWith('.github/')).sort().map(p=>{let extra='';if(p.endsWith('.tm.gz'))extra=` <a href="run-tm.html?model=${encodeURIComponent(p)}">[run]</a>`;else if(p.endsWith('.txt'))extra=` <a href="compile-tm.html?text=${encodeURIComponent(p)}">[compile]</a>`;return `<div><a href="${esc(p)}">${esc(p)}</a>${extra}</div>`}).join('')}
+async function githubList(){
+ const h=location.hostname;
+ if(!h.endsWith('.github.io'))throw 0;
+ const owner=h.split('.')[0], seg=location.pathname.split('/').filter(Boolean);
+ const repo=seg.length?seg[0]:owner+'.github.io';
+ const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`);
+ if(!r.ok)throw 0; const j=await r.json(); render(j.tree.filter(x=>x.type==='blob').map(x=>x.path));
+}
+githubList().catch(fallback);
+</script></main></body></html>
