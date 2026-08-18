@@ -35,6 +35,7 @@ function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a}
 function hash32(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h>>>0}
 function chooseAffine(total,seedText){if(total<=1)return {a:1,b:0,modulus:1};let a=Math.min(65521,total-1);if((a&1)===0)a--;while(a>1&&gcd(a,total)!==1)a-=2;if(a<=1)a=1;const b=hash32(seedText)%total;return {a,b,modulus:total}}
 function opaqueId(local,aff){return aff.modulus<=1?0:(aff.a*local+aff.b)%aff.modulus}
+function decodeContextKey(key,alphabet){let out='';for(let i=0;i<key.length;i++){const id=key.charCodeAt(i)-1;if(id<0||id>=alphabet.length)throw Error('Interner Kontextindex außerhalb des Alphabets.');out+=alphabet[id]}return out}
 function addCount(z,y){if(z.first===y){z.firstCount++;z.total++;z.dist.set(y,z.firstCount);return}z.dist.set(y,(z.dist.get(y)||0)+1);z.total++}
 function bestOf(z){let by=z.first,bc=0;for(const [y,c] of z.dist){if(c>bc||(c===bc&&y<by)){by=y;bc=c}}z.best=by;z.bestCount=bc;return z}
 function countOf(z,y){return z.dist.get(y)||0}
@@ -116,7 +117,7 @@ async function buildTM(prep,found,budget,name,target){
    source:{file:name,chars:ids.length,source_alphabet_size:alphabet.length,target_text_accuracy:target,teacher_forced_accuracy:accuracy,metric:'teacher-forced next-character top-1 using true past prefix; active state = longest selected suffix context',context_order:N,state_budget:Q,full_context_accuracy_at_n:fullAccuracy,candidate_contexts:found.nodes.size,ambiguous_selected_contexts:ambiguous,selection:'minimal n for target; suffix-closed greedy state budget prioritized by maximum descendant error-gain',n_minimal_for_metric:true,q_global_minimum_proven:false,state_id_assignment:'opaque affine permutation of local context-state ordinal; context is not encoded in ReLU input',state_id_permutation:{kind:'affine_mod',a:aff.a,b:aff.b,modulus:aff.modulus},source_text_embedded:true},
    evaluation:{target,achieved:accuracy,correct:budget.correct,total:ids.length,n_curve:curve},
    source_text:prep.chars.join(''),
-   context_model:{format:'NGRAM_SUFFIX_BUDGET1',max_order:N,state_count:Q,suffix_closed:true,modal_rule:'most frequent next symbol; tie -> lower source symbol id',metric:'teacher-forced',note:'Context strings are construction metadata only; the learned ReLU controller sees opaque state IDs.'}
+   context_model:{format:'NGRAM_SUFFIX_BUDGET1',max_order:N,state_count:Q,suffix_closed:true,modal_rule:'most frequent next symbol; tie -> lower source symbol id',metric:'teacher-forced',prompt_initializer:{kind:'longest_selected_suffix_to_state_v1',max_order:N,contexts:keys.map((k,i)=>[decodeContextKey(k,alphabet),opaqueId(i,aff)])},note:'Die ReLU sieht nur opake Zustands-IDs. prompt_initializer ist ausschließlich die Laufzeit-Brücke von eingegebenem Text zum passenden Vergangenheits-Kontextzustand.'}
  };
  return obj;
 }
