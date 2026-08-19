@@ -1,2 +1,28 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Markov ReLU-TM</title><style>*{box-sizing:border-box}body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:760px;margin:auto;padding:18px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:15px;margin:12px 0}a{display:block;background:#2f6fed;color:#fff;text-decoration:none;border-radius:12px;padding:13px 15px;margin:9px 0;font-weight:700}.muted{color:#aaa}code{background:#222;padding:2px 5px;border-radius:5px}</style></head><body><main><h1>Variable-Order-Markov → ReLU-TM</h1><div class="card"><p><b>1.</b> Text in eine vereinigte Markov-TM übersetzen.</p><a href="compile-tm-json.html">Compile TM JSON</a><p class="muted">Root = Start/Fallback; n=1…N; längster bekannter Suffix; kein 1‑Gramm → Root; Blank → HALT.</p></div><div class="card"><p><b>2.</b> Die erzeugte lokale TM-Übergangsfunktion mit einem wachsenden ReLU zu 100 % lernen.</p><a href="compile-growing.html">Compile Growing ReLU</a></div><div class="card"><p><b>3.</b> Das gelernte <code>*.tm.relu.gz</code> auf frei eingegebenem Text schrittweise laufen lassen.</p><a href="run.html">Run</a></div></main></body></html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verzeichnis</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.4rem; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.45rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Verzeichnis</h1>
+  <ul>
+    <li><a href="compile-tm-json.html">compile-tm-json.html</a></li>
+    <li><a href="compile.html">compile.html</a></li>
+    <li><a href="run.html">run.html</a></li>
+  </ul>
+</body>
+</html>
