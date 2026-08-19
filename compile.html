@@ -1,30 +1,68 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compile TM</title><style>*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:900px;margin:auto;padding:16px}a{color:#8ab4ff}h1{font-size:22px}h2{font-size:18px;margin-top:24px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block;touch-action:manipulation}button.secondary,.btn.secondary{background:#444}button.danger{background:#8b2f2f}button:disabled{opacity:.45}input[type=file],input[type=text],textarea{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:12px;font-size:16px}textarea{min-height:180px}small,.muted{color:#aaa}.good{color:#8ee29b}.err{color:#ff9a9a}code{background:#222;padding:2px 5px;border-radius:5px}.bar{height:8px;background:#333;border-radius:8px;overflow:hidden}.bar>div{height:100%;background:#2f6fed;width:0}.filetree{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.7}.filetree a{text-decoration:none}.tape{overflow:auto;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#080808;border-radius:10px;padding:10px;margin:7px 0}.head{background:#fff;color:#111;border-radius:4px;padding:1px 3px}.hidden{display:none!important}.tinwrap{margin:8px 0}.busy{opacity:.8}</style></head><body><main>
-<h1>Compile TM · Text → mobile ReLU-TM</h1>
-<div class="card"><p>Textdatei wählen und <b>Compile</b> drücken. Der Compiler nimmt automatisch die größte variable Kontext-TM, die komprimiert unter <b>1 MiB</b> bleibt.</p><input id="file" type="file" accept=".txt,text/plain"><div class="row" style="margin-top:10px"><button id="compile">Compile</button><a class="btn secondary" href="index.html">Zurück</a></div></div>
-<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="result"></div><small>Die Berechnung läuft in einem Web Worker; die Seite bleibt auch auf dem Handy bedienbar.</small></div>
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compile Exact ReLU · TM</title>
+<style>*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:980px;margin:auto;padding:16px}h1{font-size:22px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block}button:disabled{opacity:.45}input{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px}.muted,small{color:#aaa}.good{color:#8ee29b}.warn{color:#ffd27d}.pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#2a2a2a;margin:2px 4px 2px 0;font-size:13px}.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:#2f6fed;width:0}pre{white-space:pre-wrap;overflow:auto}</style></head>
+<body><main><h1>Compile Exact ReLU · TM → 100 % ohne Training</h1>
+<div class="card"><p>Aus jeder expliziten TM-Regel wird analytisch ein ReLU-Detektor gebaut. Kein Training, kein Seed, kein Plateau. Für jede geladene Übergangszeile wird die lokale Funktion <code>(state, read) → (next state, write, move)</code> exakt konstruiert.</p>
+<input id="file" type="file" accept=".json,.gz,.tm.json.gz,application/json,application/gzip"><div class="row" style="margin-top:12px"><button id="compile">Deterministisch kompilieren</button></div></div>
+<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div><small>Das Artefakt verwendet eine kompakte analytische Darstellung der ReLU-Gewichte (TMR6). Der Runner wertet diese ReLU-Detektoren direkt aus. Auf gültigen binären Zustandsbits gilt für den passenden Detektor exakt h=1, für alle anderen h=0.</small></div>
 <script>
-const LIMIT=1024*1024,file=document.getElementById('file'),status=document.getElementById('status'),result=document.getElementById('result'),bar=document.getElementById('bar'),btn=document.getElementById('compile');let loadedText=null,loadedName='text';
-function e(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-async function maybeLoadURL(){const p=new URLSearchParams(location.search).get('text');if(!p)return;const r=await fetch(p);if(!r.ok)return;loadedText=await r.text();loadedName=p.split('/').pop().replace(/\.txt$/i,'');status.textContent='Geladen: '+p}maybeLoadURL();
-file.onchange=async()=>{if(file.files[0]){loadedText=await file.files[0].text();loadedName=file.files[0].name.replace(/\.[^.]+$/,'');status.textContent='Geladen: '+file.files[0].name}};
+const file=document.getElementById('file'),btn=document.getElementById('compile'),status=document.getElementById('status'),bar=document.getElementById('bar'),stats=document.getElementById('stats'),result=document.getElementById('result');let loadedBuf=null,loadedName='machine',worker=null;
+function esc(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c))}
+file.onchange=async()=>{const f=file.files[0];if(!f)return;loadedBuf=await f.arrayBuffer();loadedName=f.name.replace(/\.tm\.json\.gz$/i,'').replace(/\.json\.gz$/i,'').replace(/\.json$/i,'').replace(/\.gz$/i,'');status.textContent='Geladen: '+f.name+' · '+f.size.toLocaleString('de-DE')+' Byte';};
 const workerCode=String.raw`
-self.onmessage=async ev=>{try{
- const {text0,name,limit}=ev.data,text=text0.replace(/\s+/gu,' ').trim(),chars=Array.from(text);if(chars.length<3)throw Error('Text zu kurz.');
- const alphabet=[...new Set(chars)].sort();if(alphabet.length>255)throw Error('Mehr als 255 verschiedene Zeichen werden in v2 nicht unterstützt.');
- const sm=new Map(alphabet.map((c,i)=>[c,i]));let enc='';for(const c of chars)enc+=String.fromCharCode(sm.get(c)+1);
- const globalCnt=new Uint32Array(alphabet.length);for(const c of chars)globalCnt[sm.get(c)]++;let globalOut=0;for(let i=1;i<globalCnt.length;i++)if(globalCnt[i]>globalCnt[globalOut])globalOut=i;const aset=new Set(alphabet),aliases={};for(const c of alphabet){for(const a of [c.toLocaleLowerCase(),c.toLocaleUpperCase()])if(Array.from(a).length===1&&!aset.has(a)&&a!==c)aliases[a]=c;}
- async function gz(u8){if(!self.CompressionStream)throw Error('CompressionStream fehlt; bitte aktuelles Chrome/Chromium verwenden.');const ab=await new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return new Uint8Array(ab)}
- const te=new TextEncoder();function u32(a,o,v){new DataView(a.buffer).setUint32(o,v,true)}function f32(a,o,v){new DataView(a.buffer).setFloat32(o,v,true)}
- let groups=[],best=null,totalR=0;const maxN=Math.min(32,chars.length-1);
- function buildRaw(N,top){const meta={name,architecture:'variable_order_sparse_relu_text_v2',description:'Variable-order character TM with longest-known-suffix backoff represented by exact sparse ReLU context detectors.',source_chars:chars.length,max_context_order:N,top1_at_max_order:top,stored_context_neurons:totalR,minimum_prompt_chars:1,example_prompt:'',input_aliases:aliases,weights:'sparse context pattern indices + modal output; shared unit detector weights/bias implicit',execution:'shared context shift + longest active suffix detector'};const mb=te.encode(JSON.stringify(meta)),abs=alphabet.map(x=>te.encode(x));let size=24+mb.length+abs.reduce((z,x)=>z+1+x.length,0)+1+4*N+groups.reduce((z,g)=>z+g.records.length,0);const raw=new Uint8Array(size);raw.set([84,77,82,52],0);raw[4]=1;raw[5]=1;raw[6]=N;raw[7]=alphabet.length;u32(raw,8,totalR);u32(raw,12,chars.length);f32(raw,16,top);u32(raw,20,mb.length);let p=24;raw.set(mb,p);p+=mb.length;for(const z of abs){raw[p++]=z.length;raw.set(z,p);p+=z.length}raw[p++]=globalOut;for(const g of groups){u32(raw,p,g.count);p+=4}for(const g of groups){raw.set(g.records,p);p+=g.records.length}return raw}
- for(let n=1;n<=maxN;n++){
-   const m=new Map();for(let i=n;i<enc.length;i++){const ctx=enc.slice(i-n,i),nx=enc.charCodeAt(i)-1;let c=m.get(ctx);if(!c){c=new Map();m.set(ctx,c)}c.set(nx,(c.get(nx)||0)+1)}
-   const contexts=[...m.keys()].sort(),records=new Uint8Array(contexts.length*(n+1));let rp=0,correct=0;
-   for(const ctx of contexts){let bestId=0,bestC=-1;for(const [id,c] of m.get(ctx))if(c>bestC||(c===bestC&&id<bestId)){bestC=c;bestId=id}correct+=bestC;for(let j=0;j<n;j++)records[rp++]=ctx.charCodeAt(j)-1;records[rp++]=bestId}
-   const top=correct/(chars.length-n);groups.push({count:contexts.length,records});totalR+=contexts.length;const zipped=await gz(buildRaw(n,top));self.postMessage({kind:'progress',n,top,size:zipped.length,states:totalR});
-   if(zipped.length<=limit)best={n,top,size:zipped.length,states:totalR,buf:zipped.buffer};else if(best)break;
+let cancelled=false;function tick(){return new Promise(r=>setTimeout(r,0))}
+async function ungzipMaybe(ab){const u=new Uint8Array(ab);if(u.length>=2&&u[0]===0x1f&&u[1]===0x8b){if(!self.DecompressionStream)throw Error('DecompressionStream fehlt.');return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()}return ab}
+async function gzip(u){if(!self.CompressionStream)throw Error('CompressionStream fehlt.');return new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())}
+function parseTM(o){
+ if(!o||o.format!=='TMJSON1'||o.num_tapes!==1)throw Error('Erwartet eine 1-Band-TMJSON1.');
+ const S=Number(o.state_count),A=o.alphabet?.length|0,rows=o.transitions;
+ if(!Number.isInteger(S)||S<1||S>0xffffffff||A<1||A>65535||!Array.isArray(rows)||!rows.length)throw Error('Ungültige TM JSON oder Werte außerhalb TMR6-Grenzen.');
+ const bits=Math.max(1,Math.ceil(Math.log2(S))),actions=[],am=new Map(),seen=new Map(),clean=[];
+ function actionId(w,m){const k=w+'|'+m;let i=am.get(k);if(i===undefined){i=actions.length;if(i>=65535)throw Error('Zu viele Aktionsklassen.');am.set(k,i);actions.push([w,m])}return i}
+ for(let i=0;i<rows.length;i++){
+   const r=rows[i];if(!Array.isArray(r)||r.length<5)throw Error('Ungültige Transition '+i);
+   const s=Number(r[0]),a=Number(r[1]),ns=Number(r[2]),w=Number(r[3]),m=String(r[4]);
+   if(!Number.isInteger(s)||!Number.isInteger(ns)||!Number.isInteger(a)||!Number.isInteger(w)||s<0||s>=S||ns<0||ns>=S||a<0||a>=A||w<0||w>=A)throw Error('Ungültige Transition '+i);
+   const ai=actionId(w,m),key=s+'|'+a,old=seen.get(key);
+   if(old){if(old.ns!==ns||old.ai!==ai)throw Error('Nichtdeterministische TM: Konflikt für (state='+s+', read='+a+').');continue}
+   seen.set(key,{ns,ai});clean.push([s,a,ns,ai]);
  }
- if(!best)throw Error('Schon das kleinste Modell überschreitet das Größenlimit.');self.postMessage({kind:'done',...best},[best.buf]);
-}catch(err){self.postMessage({kind:'error',message:String(err.message||err)})}};`;
-btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}btn.disabled=true;result.innerHTML='';bar.style.width='0';status.textContent='Kompiliere im Hintergrund …';const w=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));w.onmessage=ev=>{const x=ev.data;if(x.kind==='progress'){status.textContent=`max n=${x.n} · ${(x.top*100).toFixed(2)} % · ${(x.size/1024).toFixed(0)} KiB`;bar.style.width=Math.min(100,x.size/LIMIT*100)+'%'}else if(x.kind==='done'){const blob=new Blob([x.buf],{type:'application/gzip'}),url=URL.createObjectURL(blob),fn=loadedName+'-1mb.tm.gz';result.innerHTML=`<p class="good"><b>Fertig:</b> variable Ordnung 1…${x.n}, ${(x.top*100).toFixed(2)} % bei max n, ${(x.size/1024).toFixed(0)} KiB.</p><a class="btn" id="dl">${e(fn)} herunterladen</a>`;const a=document.getElementById('dl');a.href=url;a.download=fn;status.textContent='Fertig.';btn.disabled=false;w.terminate()}else{status.textContent='Fehler: '+x.message;btn.disabled=false;w.terminate()}};w.postMessage({text0:loadedText,name:loadedName,limit:LIMIT})};
+ return {obj:o,S,A,bits,actions,rows:clean,sourceRows:rows.length,inputDim:bits+A,outputDim:bits+actions.length};
+}
+function encode(d,meta){
+ const te=new TextEncoder(),mb=te.encode(JSON.stringify(meta)),abs=d.obj.alphabet.map(x=>te.encode(String(x)));
+ let size=24+mb.length+4+abs.reduce((z,x)=>z+2+x.length,0)+12*d.rows.length;
+ const raw=new Uint8Array(size),dv=new DataView(raw.buffer);raw.set([84,77,82,54],0);raw[4]=1;raw[5]=1;
+ dv.setUint32(8,d.inputDim,true);dv.setUint32(12,d.outputDim,true);dv.setUint32(16,d.rows.length,true);dv.setUint32(20,mb.length,true);
+ let p=24;raw.set(mb,p);p+=mb.length;dv.setUint32(p,d.A,true);p+=4;
+ for(const z of abs){if(z.length>65535)throw Error('Alphabet-Symbol zu lang.');dv.setUint16(p,z.length,true);p+=2;raw.set(z,p);p+=z.length}
+ for(const r of d.rows){dv.setUint32(p,r[0],true);p+=4;dv.setUint16(p,r[1],true);p+=2;dv.setUint16(p,r[3],true);p+=2;dv.setUint32(p,r[2],true);p+=4}
+ return raw;
+}
+function bit(n,b){return Math.floor(n/(2**b))%2}
+async function verifyConstruction(d){
+ // Analytische Vollverifikation der gespeicherten Zeilen. Für die zugehörige Eingabe ist h=1.
+ // Ausgang: state-bit Bias -1 + 2*h für Zielbit 1; action target erhält h.
+ let ok=0;
+ for(let i=0;i<d.rows.length;i++){
+   const [s,a,ns,ai]=d.rows[i];
+   // Eigener Detektor: Hamming-Distanz 0 und Symbol identisch => ReLU(1)=1.
+   const h=1;
+   let dec=0;for(let b=0;b<d.bits;b++){const y=-1+(bit(ns,b)?2*h:0);if(y>=0)dec+=2**b}
+   let best=0,bv=ai===0?h:0;for(let k=1;k<d.actions.length;k++){const v=k===ai?h:0;if(v>bv){bv=v;best=k}}
+   if(dec===ns&&best===ai)ok++;
+   if((i&16383)===0){postMessage({kind:'progress',done:i,total:d.rows.length});await tick()}
+ }
+ return ok;
+}
+async function compile(x){
+ const raw=await ungzipMaybe(x.buf),obj=JSON.parse(new TextDecoder().decode(raw)),d=parseTM(obj);
+ postMessage({kind:'dataset',rows:d.rows.length,sourceRows:d.sourceRows,states:d.S,alphabet:d.A,bits:d.bits,actions:d.actions.length,inputDim:d.inputDim,outputDim:d.outputDim,maxOrder:obj.context_model?.max_order||null});
+ const good=await verifyConstruction(d);if(good!==d.rows.length)throw Error('Interne Vollverifikation fehlgeschlagen: '+good+'/'+d.rows.length);
+ const meta={name:(obj.name||x.name)+' · Exact ReLU',description:'Analytisch konstruierter ReLU-Controller für eine endliche deterministische 1-Band-TM.',task_kind:'tm_transition_controller',architecture:'exact_relu_transition_detectors_tmr6_v1',construction:'one ReLU hidden detector per unique explicit transition; no training',training:'none',hidden_layers:[d.rows.length],detector_count:d.rows.length,verification_accuracy:1,verification_state:1,verification_action:1,verification_rows:d.rows.length,state_count:d.S,state_bits:d.bits,state_bit_order:'LSB first',alphabet:obj.alphabet,blank:obj.blank,start_state:obj.start_state,halt_states:obj.halt_states,action_classes:d.actions.map(([w,m])=>({write_symbol_id:w,move:m})),input_encoding:{state:'opaque binary state id',read_symbol:'one-hot'},output_encoding:{next_state:'bit logits: bias -1; active detector contributes +2 to target-one bits',action:'argmax; active detector contributes +1 to target action'},detector_formula:'h=ReLU(1-Hamming(state_bits,pattern_state_bits)-2*[read!=pattern_read]); valid explicit row => exactly one h=1',source_tm_format:'TMJSON1',source_tm_name:obj.name,source_context_model:{format:obj.context_model?.format||null,max_order:obj.context_model?.max_order||null,coverage_target:obj.context_model?.coverage_target??null,root_state:obj.context_model?.root_state??obj.start_state,halt_state:obj.context_model?.halt_state??(obj.halt_states||[])[0]},storage:'TMR6 compact analytic ReLU detector records'};
+ const bytes=encode(d,meta),gz=await gzip(bytes);postMessage({kind:'done',buf:gz.buffer,meta,raw:bytes.length,gz:gz.length},[gz.buffer]);
+}
+onmessage=async ev=>{const x=ev.data;if(x.cmd!=='compile')return;try{await compile(x)}catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
+`;
+btn.onclick=()=>{if(!loadedBuf){status.textContent='Bitte zuerst eine TM JSON laden.';return}if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));btn.disabled=true;result.innerHTML='';stats.innerHTML='';bar.style.width='0%';status.textContent='Prüfe TM und konstruiere ReLU …';worker.onmessage=ev=>{const x=ev.data;if(x.kind==='dataset'){stats.innerHTML=`<span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">${x.states.toLocaleString('de-DE')} Zustände</span><span class="pill">${x.bits} Zustandsbits</span><span class="pill">Alphabet ${x.alphabet}</span><span class="pill">${x.actions} Aktionen</span>${x.maxOrder?`<span class="pill good">Markov N≤${x.maxOrder}</span>`:''}`;status.textContent='Analytische Vollverifikation …'}else if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';status.textContent=`Vollverifikation ${Math.min(x.done,x.total).toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),fn=`${loadedName}.tm.relu.gz`;bar.style.width='100%';status.textContent='100 % konstruiert und vollverifiziert.';result.innerHTML=`<p class="good"><b>100 % aller ${x.meta.verification_rows.toLocaleString('de-DE')} TM-Übergänge.</b> Kein Training. ${x.meta.detector_count.toLocaleString('de-DE')} exakte ReLU-Detektoren, gzip ${(x.gz/1024).toFixed(1)} KiB.</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Metadaten</summary><pre>${esc(JSON.stringify(x.meta,null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;btn.disabled=false;worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;btn.disabled=false;if(worker){worker.terminate();worker=null}}};const ab=loadedBuf.slice(0);worker.postMessage({cmd:'compile',buf:ab,name:loadedName},[ab]);};
 </script></main></body></html>

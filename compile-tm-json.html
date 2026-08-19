@@ -1,90 +1,88 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Compile TM JSON · Markov-Union mit Backoff</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compile TM JSON · Variable-Order Markov</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:980px;margin:auto;padding:16px}h1{font-size:22px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{flex:1 1 180px}.field label{display:block;color:#bbb;font-size:13px;margin-bottom:4px}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block;touch-action:manipulation}button.danger{background:#8b2f2f}button:disabled{opacity:.45}input[type=file],input[type=number]{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px}.muted,small{color:#aaa}.good{color:#8ee29b}.warn{color:#ffd27d}.err{color:#ff9a9a}.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:#2f6fed;width:0}.pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#2a2a2a;margin:2px 4px 2px 0;font-size:13px}code{background:#222;padding:2px 5px;border-radius:5px}pre{white-space:pre-wrap;overflow:auto}details{margin-top:8px}
+*{box-sizing:border-box}html,body{margin:0;background:#101010;color:#f3f3f3;font-family:system-ui,-apple-system,Arial,sans-serif}main{max-width:980px;margin:auto;padding:16px}h1{font-size:22px}.card{background:#181818;border:1px solid #333;border-radius:14px;padding:14px;margin:10px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{flex:1 1 180px}.field label{display:block;color:#bbb;font-size:13px;margin-bottom:4px}button,.btn{border:0;border-radius:12px;background:#2f6fed;color:#fff;padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;display:inline-block}button.danger{background:#8b2f2f}button:disabled{opacity:.45}input[type=file],input[type=number]{width:100%;background:#151515;color:#fff;border:1px solid #444;border-radius:12px;padding:10px;font-size:16px}.muted,small{color:#aaa}.good{color:#8ee29b}.warn{color:#ffd27d}.err{color:#ff9a9a}.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:#2f6fed;width:0}.pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#2a2a2a;margin:2px 4px 2px 0;font-size:13px}code{background:#222;padding:2px 5px;border-radius:5px}pre{white-space:pre-wrap;overflow:auto}details{margin-top:8px}
 </style>
 </head>
 <body><main>
 <h1>Compile TM JSON · Variable-Order-Markov-TM</h1>
 <div class="card">
-<p>Aus dem Text werden Markov-Zustände der Ordnungen <b>1…N</b> gebildet. Ein Zustand ist ein tatsächlich beobachteter Kontext. Beim Lesen eines Zeichens versucht die TM zuerst den längstmöglichen neuen Kontext; fehlt er, wird links Zeichen für Zeichen abgeschnitten. Falls selbst Ordnung 1 fehlt, fällt sie auf den <b>Root-/Startzustand</b> zurück.</p>
+<p>Für jede Ordnung <b>n=1…N</b> werden Markov-Zustände aus tatsächlich vorkommenden n-Grammen gebaut. Die fertige TM vereinigt alle Ordnungen. Nach jedem gelesenen Zeichen nimmt sie den <b>längsten bekannten Suffix-Kontext</b>; wenn er fehlt, fällt sie n→n−1→…→1 zurück. Der Root-Zustand ist Startzustand und führt für jedes Zeichen des Trainingsalphabets direkt in den passenden n=1-Zustand.</p>
 <input id="file" type="file" accept=".txt,text/plain">
 <div class="row" style="margin-top:12px">
-  <div class="field"><label>Maximale Markov-Ordnung N</label><input id="maxn" type="number" min="1" max="512" step="1" value="8"></div>
-  <div class="field"><label>Abdeckung je Ordnung (%)</label><input id="coverage" type="number" min="1" max="100" step="0.1" value="95"></div>
+  <div class="field"><label>Maximale Markov-Ordnung N</label><input id="maxn" type="number" min="1" max="64" step="1" value="8"></div>
+  <div class="field"><label>Kontextabdeckung je Ordnung (%)</label><input id="coverage" type="number" min="1" max="100" step="0.1" value="90"></div>
 </div>
-<small><b>Abdeckung</b> bedeutet hier: Für jede Ordnung n werden die häufigsten n‑Gram-Zustände behalten, bis mindestens dieser Anteil aller n‑Gram-Vorkommen des Quelltexts abgedeckt ist. Auch Ordnung 1 folgt zunächst diesem Budget. Der Root-/Startzustand besitzt trotzdem für jedes Zeichen des Quellalphabets eine Transition: zu seinem 1‑Gramm-Zustand, falls dieser behalten wurde, sonst zurück zu Root. Längere ausgewählte Zustände ziehen ihre Präfixe automatisch mit hinein. N über etwa 64 kann bei langen Texten deutlich teurer werden.</small>
+<small>n=1 wird vollständig aufgenommen, damit Root für jedes bekannte Zeichen definiert ist. Für n≥2 werden die häufigsten n-Gramm-Zustände genommen, bis mindestens die gewählte Auftretensmasse dieser Ordnung abgedeckt ist; notwendige Suffix-Zustände werden zusätzlich aufgenommen. Das ist keine Next-Character-Vorhersage: das aktuelle Zeichen wird gelesen und bestimmt den Folgezustand.</small>
 <div class="row" style="margin-top:12px"><button id="compile">Markov-TM erzeugen</button><button id="stop" class="danger" disabled>Stop</button></div>
 </div>
-<div class="card">
-<div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div>
-<small>Die resultierende TM ist auf dem Quellalphabet total: für jeden aktiven Markov-Zustand und jedes Zeichen existiert eine Transition. Beim Blank geht sie in einen Haltzustand. Ausgabe: <code>…-markov-nN-pXX.tm.json.gz</code>.</small>
-</div>
+<div class="card"><div id="status">Bereit.</div><div class="bar"><div id="bar"></div></div><div id="stats" style="margin-top:10px"></div><div id="result"></div></div>
 <script>
-const MAX_INPUT_BYTES=32*1024*1024, MAX_TRANSITIONS=2000000;
+const MAX_INPUT_BYTES=32*1024*1024, MAX_ROWS=3000000;
 const file=document.getElementById('file'),btn=document.getElementById('compile'),stopBtn=document.getElementById('stop'),status=document.getElementById('status'),bar=document.getElementById('bar'),stats=document.getElementById('stats'),result=document.getElementById('result');
 let worker=null,loadedText=null,loadedName='text';
 function esc(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c))}
-function setBusy(v){btn.disabled=v;stopBtn.disabled=!v}
 file.onchange=async()=>{const f=file.files[0];if(!f)return;if(f.size>MAX_INPUT_BYTES){loadedText=null;status.textContent='Datei zu groß: maximal 32 MiB.';return}loadedText=await f.text();loadedName=f.name.replace(/\.[^.]+$/,'');status.textContent='Geladen: '+f.name+' · '+f.size.toLocaleString('de-DE')+' Byte';};
 const workerCode=String.raw`
 let cancelled=false;
 function tick(){return new Promise(r=>setTimeout(r,0))}
+function chooseBlank(chars){const used=new Set(chars);for(let cp=0xE000;cp<=0xF8FF;cp++){const c=String.fromCharCode(cp);if(!used.has(c))return c}throw Error('Kein freies Blank-Symbol gefunden.')}
 function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a}
 function hash32(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h>>>0}
-function chooseAffine(total,seed){if(total<=1)return {kind:'affine_mod',a:1,b:0,modulus:1};let a=Math.min(65521,total-1);if((a&1)===0)a--;while(a>1&&gcd(a,total)!==1)a-=2;if(a<=1)a=1;return {kind:'affine_mod',a,b:hash32(seed)%total,modulus:total}}
-function opaqueId(local,p){return p.modulus<=1?0:(p.a*local+p.b)%p.modulus}
-function chooseBlank(chars){const used=new Set(chars);for(let cp=0xE000;cp<=0xF8FF;cp++){const c=String.fromCharCode(cp);if(!used.has(c))return c}throw Error('Kein freies internes Blank-Symbol gefunden.')}
-function encodeIds(ids){let s='';const CH=8192;for(let i=0;i<ids.length;i+=CH){const a=[];for(let j=i;j<Math.min(ids.length,i+CH);j++)a.push(ids[j]+1);s+=String.fromCharCode(...a)}return s}
-function decodeKey(key,alphabet){let out='';for(let i=0;i<key.length;i++)out+=alphabet[key.charCodeAt(i)-1];return out}
-function prepare(text){const chars=Array.from(text);if(chars.length<1)throw Error('Text ist leer.');const alphabet=[...new Set(chars)].sort();if(alphabet.length>65000)throw Error('Zu viele verschiedene Zeichen.');const sm=new Map(alphabet.map((c,i)=>[c,i])),ids=new Uint16Array(chars.length);for(let i=0;i<chars.length;i++)ids[i]=sm.get(chars[i]);return {chars,alphabet,ids,encoded:encodeIds(ids),blank:chooseBlank(chars)}}
-async function countLevel(prep,n){const m=new Map(),L=prep.ids.length,total=Math.max(0,L-n+1);for(let i=0;i<total;i++){const key=prep.encoded.slice(i,i+n);m.set(key,(m.get(key)||0)+1);if((i&32767)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'scan',n,done:i,total});await tick()}}return {map:m,total}}
-function selectByCoverage(level,target,forceAll){const entries=[...level.map.entries()].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0));const selected=new Set();if(forceAll){for(const [k] of entries)selected.add(k);return selected}const need=Math.ceil(target*level.total-1e-12);let sum=0;for(const [k,c] of entries){selected.add(k);sum+=c;if(sum>=need)break}return selected}
-function achieved(level,selected){let sum=0;for(const k of selected)sum+=level.map.get(k)||0;return level.total?sum/level.total:1}
-function longestSelectedSuffix(seq,maxN,selectedByOrder){for(let k=Math.min(maxN,seq.length);k>=1;k--){const cand=seq.slice(seq.length-k);if(selectedByOrder[k]?.has(cand))return cand}return ''}
-async function build(prep,N,target,name){
- const levels=Array(N+1),selected=Array(N+1);selected[0]=new Set(['']);
+function affineFor(m,seed){if(m<=1)return {a:1,b:0,modulus:m};let a=Math.min(65521,m-1);if((a&1)===0)a--;while(a>1&&gcd(a,m)!==1)a-=2;if(a<1)a=1;return {a,b:hash32(seed)%m,modulus:m}}
+function opaque(local,aff){return 1+((aff.a*local+aff.b)%aff.modulus)}
+async function gzipText(s){if(!self.CompressionStream)throw Error('CompressionStream fehlt; bitte aktuelles Chrome/Chromium verwenden.');const u=new TextEncoder().encode(s);const ab=await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return {raw:u.length,gz:new Uint8Array(ab)}}
+function compareGram(a,b){if(b[1]!==a[1])return b[1]-a[1];return a[0]<b[0]?-1:a[0]>b[0]?1:0}
+async function compile(x){
+ cancelled=false;const chars=Array.from(x.text);if(!chars.length)throw Error('Leerer Text.');
+ const alphabet=[...new Set(chars)].sort();if(alphabet.length>65000)throw Error('Zu viele verschiedene Zeichen.');
+ const N=Math.max(1,Math.min(64,x.maxN|0)),coverage=Math.max(.01,Math.min(1,Number(x.coverage))),blank=chooseBlank(chars),L=chars.length;
+ const selected=new Set(),perOrder=[];
  for(let n=1;n<=N;n++){
-   levels[n]=await countLevel(prep,n);selected[n]=selectByCoverage(levels[n],target,false);
-   postMessage({kind:'level',n,candidates:levels[n].map.size,selected:selected[n].size,coverage:achieved(levels[n],selected[n])});
- }
- // Prefix closure: every retained long state can be reached while the input grows.
- for(let n=N;n>=2;n--)for(const key of [...selected[n]])for(let k=1;k<n;k++)selected[k].add(key.slice(0,k));
- const coverageByOrder=[];for(let n=1;n<=N;n++)coverageByOrder.push({n,candidates:levels[n].map.size,selected:selected[n].size,coverage:achieved(levels[n],selected[n])});
- const contextKeys=[];for(let n=1;n<=N;n++)for(const k of selected[n])contextKeys.push(k);contextKeys.sort((a,b)=>a.length-b.length||(a<b?-1:a>b?1:0));
- const ROOT=0,HALT=1,firstContext=2,totalStates=2+contextKeys.length,perm=chooseAffine(totalStates,name+'|'+prep.ids.length+'|'+N+'|'+target+'|MARKOV_UNION_BACKOFF2');
- const localByKey=new Map();for(let i=0;i<contextKeys.length;i++)localByKey.set(contextKeys[i],firstContext+i);
- const rootId=opaqueId(ROOT,perm),haltId=opaqueId(HALT,perm),stateOrderById=new Int16Array(totalStates);stateOrderById.fill(-9);stateOrderById[rootId]=0;stateOrderById[haltId]=-1;
- for(let i=0;i<contextKeys.length;i++)stateOrderById[opaqueId(firstContext+i,perm)]=contextKeys[i].length;
- const activeCount=1+contextKeys.length,V=prep.alphabet.length,estimated=activeCount*(V+1);if(estimated>2000000)throw Error('Die totale Markov-TM hätte '+estimated.toLocaleString()+' Transitionen. Bitte N oder Abdeckung senken (Grenze 2.000.000).');
- const transitions=[];
- function qForKey(key){return key===''?rootId:opaqueId(localByKey.get(key),perm)}
- // Root: jedes Quellalphabet-Zeichen ist definiert; fehlt sein 1-Gramm-Zustand, bleibt die TM in Root.
- for(let y=0;y<V;y++){const key=String.fromCharCode(y+1);const nq=qForKey(selected[1].has(key)?key:'');transitions.push([rootId,y+1,nq,y+1,'R'])}
- transitions.push([rootId,0,haltId,0,'S']);
- for(let i=0;i<contextKeys.length;i++){
-   if(cancelled)throw Error('Abgebrochen.');const key=contextKeys[i],q=opaqueId(firstContext+i,perm);
-   for(let y=0;y<V;y++){
-     const seq=key+String.fromCharCode(y+1),next=longestSelectedSuffix(seq,N,selected),nq=qForKey(next);transitions.push([q,y+1,nq,y+1,'R']);
+   const counts=new Map(),total=Math.max(0,L-n+1);
+   for(let i=0;i<total;i++){
+     if(cancelled)throw Error('Abgebrochen.');const g=chars.slice(i,i+n).join('');counts.set(g,(counts.get(g)||0)+1);
+     if((i&32767)===0){postMessage({kind:'progress',phase:'count',n,done:i,total:Math.max(1,total)});await tick()}
    }
-   transitions.push([q,0,haltId,0,'S']);
-   if((i&255)===0){postMessage({kind:'rows',done:i,total:contextKeys.length,rows:transitions.length});await tick()}
+   const arr=[...counts.entries()].sort(compareGram);let picked=0,mass=0,target=n===1?total:Math.ceil(total*coverage-1e-12);
+   for(const [g,c] of arr){if(n===1||mass<target){selected.add(g);picked++;mass+=c}else break}
+   perOrder.push({n,total_windows:total,unique_ngrams:counts.size,direct_selected:picked,direct_mass:total?mass/total:1});
+   postMessage({kind:'order',n,unique:counts.size,picked,coverage:total?mass/total:1});await tick();
  }
- // Strong structural checks.
- if(transitions.length!==estimated)throw Error('Interner Fehler bei der Transitionszahl.');
- const seen=new Set();for(const r of transitions){const k=r[0]+'|'+r[1];if(seen.has(k))throw Error('Nichtdeterministische doppelte Transition '+k);seen.add(k)}
- const orderCounts=[];for(let n=1;n<=N;n++)orderCounts.push(selected[n].size);
- const obj={format:'TMJSON1',name:name+' · Markov union n≤'+N,description:'Variable-Order-Markov-Reader-TM. Zustände sind ausgewählte beobachtete n-Gramme der Ordnungen 1..N. Beim Lesen c wird der längste ausgewählte Suffix von (aktueller Kontext + c) genommen; fehlt selbst Ordnung 1, folgt Root. Root ist Start und besitzt für jedes Quellalphabet-Zeichen einen Übergang in den entsprechenden 1-Gramm-Zustand. Auf Blank geht jeder aktive Zustand in HALT.',num_tapes:1,alphabet:[prep.blank,...prep.alphabet],blank:prep.blank,blank_symbol_id:0,start_state:rootId,halt_states:[haltId],state_count:totalStates,transitions,move_encoding:{S:0,R:1,L:2},source:{file:name,chars:prep.ids.length,source_alphabet_size:V,max_order:N,coverage_target:target,source_text_embedded:false},context_model:{format:'MARKOV_UNION_BACKOFF2',max_order:N,coverage_target:target,coverage_definition:'For each order n, retain frequent observed n-gram states until their occurrence mass reaches target; then enforce prefix closure across retained higher-order contexts.',coverage_by_order:coverageByOrder,selected_state_counts_by_order:orderCounts,prefix_closed:true,root_rule:'ROOT + c -> state(c) if retained; otherwise ROOT; defined for every source-alphabet symbol c',transition_rule:'from context u reading c: next = longest retained suffix of u+c with length <= N; if no length>=1 context exists -> ROOT',fallback_rule:'drop leftmost character repeatedly; if no 1-gram state exists -> ROOT',total_on_source_alphabet:true,blank_rule:'every active state + blank -> HALT',state_id_assignment:'opaque affine permutation; state IDs do not encode context text',state_id_permutation:perm,state_order_by_id:Array.from(stateOrderById),root_state:rootId,halt_state:haltId,context_state_count:contextKeys.length},training_hints:{curriculum:'grow by source-state order 1..N; root rows are present from stage 1; targets are always final-TM targets and never relabeled',max_order:N}};
- return obj;
+ // Suffix closure: jeder längere Zustand besitzt alle rechten kürzeren Kontexte.
+ const closure=[...selected];for(const g of closure){const a=Array.from(g);for(let k=1;k<a.length;k++)selected.add(a.slice(k).join(''))}
+ // n=1 garantiert vollständig.
+ for(const c of alphabet)selected.add(c);
+ const contexts=[...selected].sort((a,b)=>Array.from(a).length-Array.from(b).length||(a<b?-1:a>b?1:0));
+ const Q=contexts.length,aff=affineFor(Q,x.name+'|'+L+'|'+N+'|'+coverage),ctxToId=new Map(),idToCtx=[];
+ for(let i=0;i<Q;i++){const id=opaque(i,aff);ctxToId.set(contexts[i],id);idToCtx.push([contexts[i],id])}
+ const root=0,halt=Q+1,stateCount=Q+2,A=alphabet.length+1,rowsExpected=(Q+1)*A;
+ if(rowsExpected>x.maxRows)throw Error('Zu viele Übergänge: '+rowsExpected.toLocaleString()+' > '+x.maxRows.toLocaleString()+'. N oder Abdeckung reduzieren.');
+ function nextCtx(ctx,c){let seq=Array.from(ctx);seq.push(c);if(seq.length>N)seq=seq.slice(seq.length-N);for(let k=seq.length;k>=1;k--){const s=seq.slice(seq.length-k).join('');if(ctxToId.has(s))return s}return ''}
+ const transitions=[];
+ // Root + alle Kontextzustände: jedes Trainingszeichen ist definiert; Blank führt nach HALT.
+ const sources=[['',root],...idToCtx];
+ for(let si=0;si<sources.length;si++){
+   const [ctx,q]=sources[si];
+   transitions.push([q,0,halt,0,'S']);
+   for(let ai=0;ai<alphabet.length;ai++){
+     const c=alphabet[ai],next=nextCtx(ctx,c),nq=next?ctxToId.get(next):root;
+     transitions.push([q,ai+1,nq,ai+1,'R']);
+   }
+   if((si&1023)===0){if(cancelled)throw Error('Abgebrochen.');postMessage({kind:'progress',phase:'rows',n:N,done:si,total:sources.length});await tick()}
+ }
+ // Tatsächliche Abdeckung nach Suffix-Closure pro Ordnung.
+ const actual=[];for(let n=1;n<=N;n++){let good=0,total=Math.max(0,L-n+1);for(let i=0;i<total;i++)if(selected.has(chars.slice(i,i+n).join('')))good++;actual.push({n,coverage:total?good/total:1,selected_states:contexts.filter(s=>Array.from(s).length===n).length,total_windows:total})}
+ const obj={format:'TMJSON1',name:x.name+' · variable-order Markov n≤'+N,description:'1-Band-Reader-TM aus vereinigten Markov-Ketten n=1..N. Zustand = bekannter Vergangenheitskontext. Beim Lesen c: neuer Zustand = längster ausgewählter Suffix von Kontext+c; Backoff links bis n=1, sonst Root. Root ist Startzustand. Zeichen werden unverändert geschrieben und Kopf bewegt R; Blank führt nach HALT.',num_tapes:1,alphabet:[blank,...alphabet],blank,blank_symbol_id:0,start_state:root,halt_states:[halt],state_count:stateCount,transitions,move_encoding:{S:0,R:1,L:2},source:{file:x.name,chars:L,source_alphabet_size:alphabet.length,max_order:N,coverage_target:coverage,selection:'per order: most frequent n-gram states until occurrence-mass target; n=1 complete; then suffix closure',source_text_embedded:false},context_model:{format:'VARIABLE_ORDER_MARKOV_TM1',max_order:N,coverage_target:coverage,root_state:root,halt_state:halt,backoff:'longest selected suffix after consuming read symbol; delete leftmost symbol repeatedly; if no n=1 state then root',root_policy:'for every source alphabet symbol c: root --c--> state(c)',state_id_assignment:'root=0; context states use deterministic opaque affine permutation; halt=Q+1',state_id_permutation:{kind:'affine_mod_plus_one',a:aff.a,b:aff.b,modulus:aff.modulus},states:idToCtx,per_order:actual,selection_stats:perOrder},runtime_semantics:{kind:'reader',input_head_start:0,write:'copy read symbol',move:'R',end_of_input:'blank -> halt'}};
+ const packed=await gzipText(JSON.stringify(obj));postMessage({kind:'done',buf:packed.gz.buffer,raw:packed.raw,gz:packed.gz.length,N,Q,stateCount,rows:transitions.length,alphabet:alphabet.length,perOrder:actual,name:x.name,coverage},[packed.gz.buffer]);
 }
-async function gzipText(s){if(!self.CompressionStream)throw Error('CompressionStream fehlt; bitte aktuelles Chrome/Chromium verwenden.');const u=new TextEncoder().encode(s),ab=await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return {raw:u.length,gz:new Uint8Array(ab)}}
-onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}if(x.cmd!=='compile')return;cancelled=false;try{const prep=prepare(x.text),N=Math.max(1,Math.min(x.maxN|0,Math.min(512,prep.ids.length))),target=Math.max(.01,Math.min(1,Number(x.coverage)));postMessage({kind:'phase',message:'Zähle Markov-Zustände für n=1…'+N+' …'});const obj=await build(prep,N,target,x.name);postMessage({kind:'phase',message:'Komprimiere TM JSON …'});const packed=await gzipText(JSON.stringify(obj));postMessage({kind:'done',buf:packed.gz.buffer,rawSize:packed.raw,gzSize:packed.gz.length,objSummary:{N,coverage:target,states:obj.state_count,contextStates:obj.context_model.context_state_count,rows:obj.transitions.length,alphabet:obj.alphabet.length-1,coverageByOrder:obj.context_model.coverage_by_order}},[packed.gz.buffer])}catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
+onmessage=async ev=>{const x=ev.data;if(x.cmd==='cancel'){cancelled=true;return}if(x.cmd!=='compile')return;try{await compile(x)}catch(e){postMessage({kind:'error',message:String(e.message||e)})}};
 `;
-btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';const maxN=Math.max(1,Math.min(512,+document.getElementById('maxn').value||8)),coverage=Math.max(1,Math.min(100,+document.getElementById('coverage').value||95))/100;status.textContent='Starte …';worker.onmessage=ev=>{const x=ev.data;if(x.kind==='phase')status.textContent=x.message;else if(x.kind==='scan'){bar.style.width=(100*(x.n-1+x.done/Math.max(1,x.total))/maxN).toFixed(1)+'%';status.textContent=`n=${x.n}: ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')} n-Gramme zählen`;}else if(x.kind==='level'){stats.innerHTML+=`<span class="pill">n=${x.n}: ${x.selected.toLocaleString('de-DE')}/${x.candidates.toLocaleString('de-DE')} Zustände · ${(100*x.coverage).toFixed(2)} %</span>`;}else if(x.kind==='rows'){status.textContent=`TM-Transitionen: ${x.rows.toLocaleString('de-DE')} Zeilen`;bar.style.width=(90+10*x.done/Math.max(1,x.total)).toFixed(1)+'%';}else if(x.kind==='done'){const z=x.objSummary,gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),pct=(100*z.coverage).toFixed(1).replace(/\.0$/,''),fn=`${loadedName}-markov-n${z.N}-p${pct}.tm.json.gz`;bar.style.width='100%';status.textContent='Markov-TM erzeugt.';stats.innerHTML=`<span class="pill good">N=${z.N}</span><span class="pill">${z.contextStates.toLocaleString('de-DE')} Kontextzustände</span><span class="pill">${z.states.toLocaleString('de-DE')} Zustände inkl. Root/Halt</span><span class="pill">${z.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">Alphabet ${z.alphabet}</span><span class="pill">gzip ${(x.gzSize/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>Erzeugt.</b> Root ist Startzustand. Fallback entfernt links so lange Zeichen, bis ein bekannter Suffixzustand gefunden wird; sonst Root. Die TM enthält für jeden aktiven Zustand alle Zeichen des Quellalphabets sowie eine Blank→HALT-Transition.</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Abdeckung je Ordnung</summary><pre>${esc(JSON.stringify(z.coverageByOrder,null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null;}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,name:loadedName,maxN,coverage});};
+function setBusy(v){btn.disabled=v;stopBtn.disabled=!v}
+btn.onclick=()=>{if(!loadedText){status.textContent='Bitte zuerst eine Textdatei wählen.';return}if(worker)worker.terminate();worker=new Worker(URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'})));setBusy(true);result.innerHTML='';stats.innerHTML='';bar.style.width='0%';const maxN=Math.max(1,Math.min(64,+document.getElementById('maxn').value||8)),coverage=Math.max(.01,Math.min(100,+document.getElementById('coverage').value||90))/100;status.textContent='Zähle Markov-Zustände …';worker.onmessage=ev=>{const x=ev.data;if(x.kind==='progress'){const p=x.total?x.done/x.total:0;bar.style.width=(100*p).toFixed(1)+'%';status.textContent=x.phase==='count'?`n=${x.n}: n-Gramme zählen · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`:`TM-Übergänge schreiben · ${x.done.toLocaleString('de-DE')}/${x.total.toLocaleString('de-DE')}`;}else if(x.kind==='order'){stats.innerHTML=`<span class="pill">n=${x.n}</span><span class="pill">${x.unique.toLocaleString('de-DE')} verschieden</span><span class="pill">${x.picked.toLocaleString('de-DE')} direkt gewählt</span><span class="pill good">${(100*x.coverage).toFixed(2)} % Masse</span>`;}else if(x.kind==='done'){const gz=new Uint8Array(x.buf),url=URL.createObjectURL(new Blob([gz],{type:'application/gzip'})),pct=(100*x.coverage).toFixed(1).replace(/\.0$/,''),fn=`${loadedName}-markov-n${x.N}-p${pct}.tm.json.gz`;bar.style.width='100%';status.textContent='Markov-TM erzeugt.';stats.innerHTML=`<span class="pill good">N=${x.N}</span><span class="pill">${x.Q.toLocaleString('de-DE')} Kontextzustände</span><span class="pill">${x.stateCount.toLocaleString('de-DE')} Zustände inkl. Root/HALT</span><span class="pill">${x.rows.toLocaleString('de-DE')} Transitionen</span><span class="pill">Alphabet ${x.alphabet}</span><span class="pill">gzip ${(x.gz/1024).toFixed(1)} KiB</span>`;result.innerHTML=`<p class="good"><b>Variable-Order-Markov-TM fertig.</b> Root ist Zustand 0. Die Maschine liest Text von links nach rechts, hält am Blank und fällt bei unbekanntem langem Kontext automatisch auf den längsten bekannten rechten Suffix zurück.</p><a id="dl" class="btn">${esc(fn)} herunterladen</a><details><summary>Abdeckung nach Ordnung</summary><pre>${esc(JSON.stringify(x.perOrder,null,2))}</pre></details>`;const a=document.getElementById('dl');a.href=url;a.download=fn;setBusy(false);worker.terminate();worker=null}else if(x.kind==='error'){status.textContent='Fehler: '+x.message;setBusy(false);if(worker){worker.terminate();worker=null}}};worker.postMessage({cmd:'compile',text:loadedText,name:loadedName,maxN,coverage,maxRows:MAX_ROWS});};
 stopBtn.onclick=()=>{if(worker){status.textContent='Stop angefordert …';worker.postMessage({cmd:'cancel'})}};
 </script>
 </main></body></html>
